@@ -1,0 +1,16 @@
+# Original LLM plugin (not part of the skill)
+llm-fecfile/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+.python-version
+
+# uv
+uv.lock
+
+# OS
+.DS_Store
