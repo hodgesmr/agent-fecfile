@@ -1,9 +1,6 @@
 # Original LLM plugin (not part of the skill)
 llm-fecfile/
 
-# Packaged skill (generated, not committed - use GitHub Releases)
-*.zip
-
 # Python
 __pycache__/
 *.py[cod]

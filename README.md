@@ -2,6 +2,8 @@
 
 A Claude Code Agent Skill for analyzing Federal Election Commission (FEC) campaign finance filings.
 
+> **Note:** This skill requires local network access to fetch data from the FEC API (`docquery.fec.gov`). It works with [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) running locally, but not in Claude's web environment where external API access is restricted.
+
 ## Features
 
 - Fetch and analyze FEC filings by filing ID
@@ -11,22 +13,13 @@ A Claude Code Agent Skill for analyzing Federal Election Commission (FEC) campai
 
 ## Requirements
 
-- [Claude Code](https://claude.ai/code)
+- [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code)
 - [uv](https://docs.astral.sh/uv/) (for running the fetch script)
 - Python 3.9+
 
 ## Installation
 
-### Option 1: Upload ZIP to Claude (Easiest)
-
-1. Download `fec-filing-skill.zip` from the [Releases page](../../releases)
-2. In Claude, go to **Settings > Capabilities**
-3. In the Skills section, click **"Upload skill"**
-4. Upload the ZIP file
-
-The skill is now available in your Claude sessions.
-
-### Option 2: Clone this repository (Project Skill)
+### Option 1: Clone this repository (Project Skill)
 
 ```bash
 git clone <repo-url> fec-skill
@@ -35,7 +28,7 @@ cd fec-skill
 
 The skill is automatically available when using Claude Code in this directory.
 
-### Option 3: Install as a Personal Skill
+### Option 2: Install as a Personal Skill
 
 Copy the skill to your personal skills directory:
 
@@ -46,7 +39,7 @@ cp -r /tmp/fec-skill/.claude/skills/fec-filing ~/.claude/skills/
 
 The skill is now available globally in all Claude Code sessions.
 
-### Option 4: Add to an Existing Project
+### Option 3: Add to an Existing Project
 
 ```bash
 mkdir -p your-project/.claude/skills
@@ -90,18 +83,6 @@ uv run .claude/skills/fec-filing/scripts/fetch_filing.py 1896830
 ```
 
 Dependencies are automatically installed by uv on first run.
-
-## Creating a Release (Maintainers)
-
-To create a new release with the ZIP file:
-
-```bash
-# Generate the ZIP
-./scripts/package-skill.sh
-
-# Create a GitHub release and attach the ZIP
-gh release create v1.0.0 fec-filing-skill.zip --title "v1.0.0" --notes "Initial release"
-```
 
 ## Acknowledgments
 
