@@ -53,6 +53,9 @@ cp -R /tmp/claude-fecfile/.claude/skills/fecfile your-project/.claude/skills/
 
 Once installed, ask Claude Code to analyze FEC filings:
 
+> ![WARNING]
+> FEC filings should be considered [untrusted content](https://simonwillison.net/2025/Jun/16/the-lethal-trifecta/). A malicious campaign sneaking prompt injections into the memo text field of their F99 is probably unlikely, but not impossible.
+
 - "Tell me about the committee for FEC 1896830"
 
 ```
