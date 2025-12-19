@@ -25,7 +25,7 @@ This skill is ported from Derek Willis's [llm-fecfile](https://github.com/dwilli
 ### Option 1: Clone this repository (Project Skill)
 
 ```bash
-git clone <repo-url> claude-fecfile
+git clone git@github.com:hodgesmr/claude-fecfile.git claude-fecfile
 cd claude-fecfile
 ```
 
@@ -36,7 +36,7 @@ The skill is automatically available when using Claude Code in this directory.
 Copy the skill to your personal skills directory:
 
 ```bash
-git clone <repo-url> /tmp/claude-fecfile
+git clone git@github.com:hodgesmr/claude-fecfile.git /tmp/claude-fecfile
 cp -r /tmp/claude-fecfile/.claude/skills/fecfile ~/.claude/skills/
 ```
 
