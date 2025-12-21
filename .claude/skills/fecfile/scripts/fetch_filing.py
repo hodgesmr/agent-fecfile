@@ -18,6 +18,7 @@ Examples:
     uv run fetch_filing.py 1896830 --schedule A       # Only Schedule A (contributions)
     uv run fetch_filing.py 1896830 --schedule B       # Only Schedule B (disbursements)
     uv run fetch_filing.py 1896830 --schedules A,B,C  # Multiple schedules
+    uv run fetch_filing.py 1896830 --stream           # Stream as JSONL (low memory)
 
 Dependencies are automatically installed by uv.
 """
@@ -40,6 +41,8 @@ Examples:
   %(prog)s 1896830 --schedule A       # Only Schedule A (contributions)
   %(prog)s 1896830 --schedule B       # Only Schedule B (disbursements)
   %(prog)s 1896830 --schedules A,B,C  # Multiple schedules
+  %(prog)s 1896830 --stream           # Stream as JSONL (low memory)
+  %(prog)s 1896830 --stream --schedule A  # Stream only Schedule A
 
 Schedule codes:
   A  - Contributions (Schedule A)
@@ -47,6 +50,11 @@ Schedule codes:
   C  - Loans (Schedule C)
   D  - Debts (Schedule D)
   E  - Independent Expenditures (Schedule E)
+
+Streaming mode (--stream):
+  Outputs JSONL (one JSON object per line) instead of a single JSON document.
+  Each line has: {"data_type": "...", "data": {...}}
+  Uses constant memory regardless of filing size.
 """,
     )
     parser.add_argument(
@@ -71,6 +79,11 @@ Schedule codes:
         metavar="X,Y",
         help="Only fetch multiple schedules (comma-separated, e.g., A,B)",
     )
+    parser.add_argument(
+        "--stream",
+        action="store_true",
+        help="Stream output as JSONL (one JSON object per line, low memory usage)",
+    )
     return parser.parse_args()
 
 
@@ -90,6 +103,22 @@ def build_options(args):
         options["filter_itemizations"] = codes
 
     return options
+
+
+def stream_filing(filing_id, options):
+    """Stream filing data as JSONL using iter_http."""
+    for item in fecfile.iter_http(filing_id, options=options):
+        record = {
+            "data_type": item.data_type,
+            "data": item.data,
+        }
+        print(json.dumps(record, default=str))
+
+
+def fetch_filing(filing_id, options):
+    """Fetch complete filing data using from_http."""
+    filing_data = fecfile.from_http(filing_id, options=options)
+    print(json.dumps(filing_data, indent=2, default=str))
 
 
 def main():
@@ -113,11 +142,20 @@ def main():
         )
         sys.exit(1)
 
+    if args.summary_only and args.stream:
+        print(
+            "Error: --summary-only cannot be combined with --stream.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
     options = build_options(args)
 
     try:
-        filing_data = fecfile.from_http(args.filing_id, options=options)
-        print(json.dumps(filing_data, indent=2, default=str))
+        if args.stream:
+            stream_filing(args.filing_id, options)
+        else:
+            fetch_filing(args.filing_id, options)
     except Exception as e:
         print(f"Error fetching filing {args.filing_id}: {e}", file=sys.stderr)
         sys.exit(1)

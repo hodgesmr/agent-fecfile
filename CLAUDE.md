@@ -24,11 +24,12 @@ Fetch a filing:
 uv run .claude/skills/fecfile/scripts/fetch_filing.py <FILING_ID> [options]
 ```
 
-Pre-filter options:
+Options:
 - `--summary-only` - Only filing summary (no itemizations)
 - `--schedule A` - Only Schedule A (contributions)
 - `--schedule B` - Only Schedule B (disbursements)
 - `--schedules A,B` - Multiple schedules
+- `--stream` - Output JSONL for constant-memory processing
 
 ## Large Filing Handling
 
@@ -36,7 +37,10 @@ FEC filings vary enormously in size. Small filings can be used directly, but lar
 
 1. **Pre-filter** - Use `--summary-only` or `--schedule X` to filter at parse time
 2. **Check size** - Count itemizations before consuming
-3. **Post-filter** - Use pandas to aggregate/limit large results (see SKILL.md for patterns)
+3. **Post-filter** - Use pandas to aggregate/limit large results
+4. **Stream** - Use `--stream` for constant-memory JSONL processing of massive filings
+
+See SKILL.md for detailed patterns including the producer/consumer streaming model.
 
 ## Acknowledgments
 

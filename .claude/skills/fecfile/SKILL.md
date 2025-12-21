@@ -90,12 +90,49 @@ EOF
 uv run .claude/skills/fecfile/scripts/fetch_filing.py <ID> --schedule A 2>&1 | uv run /tmp/analysis.py
 ```
 
+### Streaming Mode (Producer/Consumer Model)
+
+For truly massive filings where even a single schedule is too large to hold in memory, use `--stream` to output JSONL (one JSON object per line):
+
+```bash
+uv run .claude/skills/fecfile/scripts/fetch_filing.py <ID> --stream --schedule A
+```
+
+Each line has the format: `{"data_type": "...", "data": {...}}`
+
+**How streaming works:**
+
+The producer (fetch_filing.py) outputs one record at a time without loading the full filing. A consumer script reads one line at a time and aggregates incrementally. Neither side ever holds all records in memory.
+
+Example streaming aggregation:
+
+```bash
+uv run .claude/skills/fecfile/scripts/fetch_filing.py <ID> --stream --schedule A | python3 -c "
+import json, sys
+from collections import defaultdict
+totals = defaultdict(float)
+counts = defaultdict(int)
+for line in sys.stdin:
+    rec = json.loads(line)
+    if rec['data_type'] == 'SA':
+        state = rec['data'].get('contributor_state', 'Unknown')
+        amt = float(rec['data'].get('contribution_amount', 0))
+        totals[state] += amt
+        counts[state] += 1
+for state in sorted(totals, key=lambda s: -totals[s]):
+    print(f'{state}: {counts[state]} contributions, \${totals[state]:,.2f}')
+"
+```
+
+This processes hundreds of thousands of records using constant memory.
+
 ### Guidelines
 
 1. **Small filings** - Can be used directly without filtering
 2. **Large filings** - Pre-filter with `--summary-only` or `--schedule X`, then check size
 3. **Massive results** - Post-filter with pandas to aggregate, filter, and limit output
-4. **Limit output** - Use `.head()`, `.nlargest()`, `.nsmallest()` to cap results
+4. **Streaming mode** - Use `--stream` with inline Python consumers for constant-memory processing
+5. **Limit output** - Use `.head()`, `.nlargest()`, `.nsmallest()` to cap results
 
 ## Finding Filing IDs
 
