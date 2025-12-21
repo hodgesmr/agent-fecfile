@@ -13,7 +13,7 @@ This repo contains an Agent Skill for analyzing FEC (Federal Election Commission
 ## Key Details
 
 - **Skill name**: `fecfile`
-- **Dependencies**: `fecfile`, `pandas` - managed via inline script metadata (PEP 723), auto-installed by `uv run`
+- **Dependencies**: `fecfile`- managed via inline script metadata (PEP 723), auto-installed by `uv run`
 - **Data source**: FEC API at `docquery.fec.gov`
 - **Python**: Requires 3.9+
 
