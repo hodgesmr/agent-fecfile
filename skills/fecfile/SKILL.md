@@ -140,7 +140,7 @@ totals = defaultdict(float)
 counts = defaultdict(int)
 for line in sys.stdin:
     rec = json.loads(line)
-    if rec['data_type'] == 'SA':
+    if rec['data_type'] == 'itemization':
         state = rec['data'].get('contributor_state', 'Unknown')
         amt = float(rec['data'].get('contribution_amount', 0))
         totals[state] += amt
