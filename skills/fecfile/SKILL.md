@@ -14,6 +14,16 @@ This skill enables analysis of Federal Election Commission campaign finance fili
 
 Dependencies are automatically installed when running the script with `uv run`.
 
+## First-Time Check
+
+The first time this skill is invoked in a session, verify that `uv` is installed by running:
+
+```bash
+uv --version
+```
+
+If this command fails or `uv` is not found, do not proceed. Instead, inform the user that `uv` is required but not installed, and direct them to the installation guide: https://docs.astral.sh/uv/getting-started/installation/
+
 ## Quick Start
 
 To analyze an FEC filing, use the helper script:
