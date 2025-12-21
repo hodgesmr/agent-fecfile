@@ -2,7 +2,8 @@
 # /// script
 # requires-python = ">=3.9"
 # dependencies = [
-#     "fecfile>=0.6.0",
+#     "fecfile>=0.9.1",
+#     "pandas>=2.3.0",
 # ]
 # ///
 """

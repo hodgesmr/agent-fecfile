@@ -13,7 +13,7 @@ This repo contains a Claude Code Agent Skill for analyzing FEC (Federal Election
 ## Key Details
 
 - **Skill name**: `fecfile`
-- **Dependencies**: Managed via inline script metadata (PEP 723) - use `uv run` to auto-install
+- **Dependencies**: `fecfile`, `pandas` - managed via inline script metadata (PEP 723), auto-installed by `uv run`
 - **Data source**: FEC API at `docquery.fec.gov`
 - **Python**: Requires 3.9+
 
@@ -23,6 +23,12 @@ Fetch a filing:
 ```bash
 uv run .claude/skills/fecfile/scripts/fetch_filing.py <FILING_ID>
 ```
+
+## Large Filing Handling
+
+FEC filings can be very large. For big filings, filter data before consuming:
+- Pipe to `python3` for simple stdlib filtering
+- Write temp scripts with pandas for aggregations (see SKILL.md for patterns)
 
 ## Origin
 

@@ -27,7 +27,63 @@ Example:
 uv run .claude/skills/fecfile/scripts/fetch_filing.py 1896830
 ```
 
-The `fecfile` library and other dependencies are installed automatically by uv.
+The `fecfile` and `pandas` libraries are installed automatically by uv.
+
+## Handling Large Filings
+
+FEC filings vary widely in size. Small filings (a few hundred lines) can be used directly, but large filings (thousands of itemizations) should be filtered before analysis to avoid overwhelming the context window.
+
+**Check the size first:**
+```bash
+uv run .claude/skills/fecfile/scripts/fetch_filing.py <ID> 2>&1 | python3 -c "
+import json, sys
+data = json.load(sys.stdin)
+for sched, items in data.get('itemizations', {}).items():
+    print(f'{sched}: {len(items)} items')
+"
+```
+
+### Simple Filtering (stdlib)
+
+For basic filtering, pipe to `python3`:
+
+```bash
+# Filing summary only (no itemizations)
+uv run .claude/skills/fecfile/scripts/fetch_filing.py <ID> 2>&1 | python3 -c "
+import json, sys
+data = json.load(sys.stdin)
+print(json.dumps(data.get('filing', {}), indent=2, default=str))
+"
+```
+
+### Pandas Filtering
+
+For aggregations and complex analysis, write a temp script with inline dependencies:
+
+```bash
+cat > /tmp/analysis.py << 'EOF'
+# /// script
+# requires-python = ">=3.9"
+# dependencies = ["pandas>=2.3.0"]
+# ///
+import json, sys
+import pandas as pd
+
+data = json.load(sys.stdin)
+df = pd.DataFrame(data.get('itemizations', {}).get('Schedule A', []))
+# Your analysis here...
+print(df.groupby('contributor_state')['contribution_amount'].agg(['count', 'sum']).sort_values('sum', ascending=False).to_string())
+EOF
+
+uv run .claude/skills/fecfile/scripts/fetch_filing.py <ID> 2>&1 | uv run /tmp/analysis.py
+```
+
+### Guidelines
+
+1. **Check size first** - Count itemizations before deciding to filter
+2. **Filter early** - Use pandas to select only relevant columns/rows
+3. **Aggregate** - Use groupby, sum, count to reduce data volume
+4. **Limit output** - Use `.head()`, `.nlargest()`, `.nsmallest()` to cap results
 
 ## Finding Filing IDs
 
