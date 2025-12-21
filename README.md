@@ -2,7 +2,7 @@
 
 An [Agent Skill](https://agentskills.io) for analyzing Federal Election Commission (FEC) campaign finance filings.
 
-This skill is ported from Derek Willis's [llm-fecfile](https://github.com/dwillis/llm-fecfile), an LLM plugin that provides FEC filing analysis as fragments for Simon Willison's [LLM](https://llm.datasette.io/) CLI tool. The core functionality and field mapping guidance have been adapted into the Agent Skill format, making FEC data analysis available directly within agent sessions.
+This skill was originally ported from Derek Willis's [llm-fecfile](https://github.com/dwillis/llm-fecfile), an LLM plugin that provides FEC filing analysis as fragments for Simon Willison's [LLM](https://llm.datasette.io/) CLI tool. The core functionality and field mapping guidance have been adapted into the Agent Skill format, making FEC data analysis available directly within agent sessions. I wrote about that initial process [here](https://matthodges.com/posts/2025-12-19-ai-agent-fec/).
 
 > [!NOTE]
 > This Skill requires local network access to fetch data from the FEC (`docquery.fec.gov`). It will not work in environments where external network access is restricted.
