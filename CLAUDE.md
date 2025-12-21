@@ -21,15 +21,24 @@ This repo contains a Claude Code Agent Skill for analyzing FEC (Federal Election
 
 Fetch a filing:
 ```bash
-uv run .claude/skills/fecfile/scripts/fetch_filing.py <FILING_ID>
+uv run .claude/skills/fecfile/scripts/fetch_filing.py <FILING_ID> [options]
 ```
+
+Pre-filter options:
+- `--summary-only` - Only filing summary (no itemizations)
+- `--schedule A` - Only Schedule A (contributions)
+- `--schedule B` - Only Schedule B (disbursements)
+- `--schedules A,B` - Multiple schedules
 
 ## Large Filing Handling
 
-FEC filings can be very large. For big filings, filter data before consuming:
-- Pipe to `python3` for simple stdlib filtering
-- Write temp scripts with pandas for aggregations (see SKILL.md for patterns)
+FEC filings vary enormously in size. Small filings can be used directly, but large filers (ActBlue, WinRed, presidential campaigns) may have hundreds of thousands of itemizations.
 
-## Origin
+1. **Pre-filter** - Use `--summary-only` or `--schedule X` to filter at parse time
+2. **Check size** - Count itemizations before consuming
+3. **Post-filter** - Use pandas to aggregate/limit large results (see SKILL.md for patterns)
 
-Ported from [llm-fecfile](https://github.com/dwillis/llm-fecfile) by Derek Willis.
+## Acknowledgments
+
+- Built on the [fecfile](https://github.com/esonderegger/fecfile) library by Evan Sonderegger
+- Inspired by [llm-fecfile](https://github.com/dwillis/llm-fecfile) by Derek Willis

@@ -19,23 +19,46 @@ Dependencies are automatically installed when running the script with `uv run`.
 To analyze an FEC filing, use the helper script:
 
 ```bash
-uv run .claude/skills/fecfile/scripts/fetch_filing.py <FILING_ID>
+uv run .claude/skills/fecfile/scripts/fetch_filing.py <FILING_ID> [options]
 ```
 
-Example:
+Examples:
 ```bash
-uv run .claude/skills/fecfile/scripts/fetch_filing.py 1896830
+uv run .claude/skills/fecfile/scripts/fetch_filing.py 1896830                   # Full filing
+uv run .claude/skills/fecfile/scripts/fetch_filing.py 1896830 --summary-only    # Summary only
+uv run .claude/skills/fecfile/scripts/fetch_filing.py 1896830 --schedule A      # Only contributions
+uv run .claude/skills/fecfile/scripts/fetch_filing.py 1896830 --schedule B      # Only disbursements
+uv run .claude/skills/fecfile/scripts/fetch_filing.py 1896830 --schedules A,B   # Multiple schedules
 ```
 
 The `fecfile` and `pandas` libraries are installed automatically by uv.
 
 ## Handling Large Filings
 
-FEC filings vary widely in size. Small filings (a few hundred lines) can be used directly, but large filings (thousands of itemizations) should be filtered before analysis to avoid overwhelming the context window.
+FEC filings vary enormously in size. Small filings (like state party monthly reports) may have only a few dozen itemizations and can be used directly. However, major committees like ActBlue, WinRed, and presidential campaigns can have hundreds of thousands of itemizations in a single filing. **Do not dump large filing data directly into the context window.**
 
-**Check the size first:**
+### Pre-Filtering at Parse Time
+
+Use CLI flags to filter before data is loaded into memory:
+
+| Flag | Effect |
+|------|--------|
+| `--summary-only` | Only filing summary (no itemizations) |
+| `--schedule A` | Only Schedule A (contributions) |
+| `--schedule B` | Only Schedule B (disbursements) |
+| `--schedule C` | Only Schedule C (loans) |
+| `--schedule D` | Only Schedule D (debts) |
+| `--schedule E` | Only Schedule E (independent expenditures) |
+| `--schedules A,B` | Multiple schedules (comma-separated) |
+
+Schedules you don't request are never parsed.
+
+### Checking Size
+
+Even after pre-filtering, results from large filers may be too big for the context window. Check the size:
+
 ```bash
-uv run .claude/skills/fecfile/scripts/fetch_filing.py <ID> 2>&1 | python3 -c "
+uv run .claude/skills/fecfile/scripts/fetch_filing.py <ID> --schedule A 2>&1 | python3 -c "
 import json, sys
 data = json.load(sys.stdin)
 for sched, items in data.get('itemizations', {}).items():
@@ -43,22 +66,11 @@ for sched, items in data.get('itemizations', {}).items():
 "
 ```
 
-### Simple Filtering (stdlib)
+If itemization counts are in the thousands or more, you must post-filter before presenting results.
 
-For basic filtering, pipe to `python3`:
+### Post-Filtering with Pandas
 
-```bash
-# Filing summary only (no itemizations)
-uv run .claude/skills/fecfile/scripts/fetch_filing.py <ID> 2>&1 | python3 -c "
-import json, sys
-data = json.load(sys.stdin)
-print(json.dumps(data.get('filing', {}), indent=2, default=str))
-"
-```
-
-### Pandas Filtering
-
-For aggregations and complex analysis, write a temp script with inline dependencies:
+Use Python/pandas to aggregate, filter, and limit results:
 
 ```bash
 cat > /tmp/analysis.py << 'EOF'
@@ -71,18 +83,18 @@ import pandas as pd
 
 data = json.load(sys.stdin)
 df = pd.DataFrame(data.get('itemizations', {}).get('Schedule A', []))
-# Your analysis here...
+# Aggregate and limit output
 print(df.groupby('contributor_state')['contribution_amount'].agg(['count', 'sum']).sort_values('sum', ascending=False).to_string())
 EOF
 
-uv run .claude/skills/fecfile/scripts/fetch_filing.py <ID> 2>&1 | uv run /tmp/analysis.py
+uv run .claude/skills/fecfile/scripts/fetch_filing.py <ID> --schedule A 2>&1 | uv run /tmp/analysis.py
 ```
 
 ### Guidelines
 
-1. **Check size first** - Count itemizations before deciding to filter
-2. **Filter early** - Use pandas to select only relevant columns/rows
-3. **Aggregate** - Use groupby, sum, count to reduce data volume
+1. **Small filings** - Can be used directly without filtering
+2. **Large filings** - Pre-filter with `--summary-only` or `--schedule X`, then check size
+3. **Massive results** - Post-filter with pandas to aggregate, filter, and limit output
 4. **Limit output** - Use `.head()`, `.nlargest()`, `.nsmallest()` to cap results
 
 ## Finding Filing IDs
