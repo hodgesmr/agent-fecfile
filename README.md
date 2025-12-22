@@ -41,9 +41,9 @@ Replace the target path with your runtime's skill directory as needed.
 
 ## Updating
 
-Pull the latest changes and re-copy:
+Fetch the latest tag and re-copy:
 ```bash
-cd ~/agent-fecfile && git fetch && git checkout latest
+cd ~/agent-fecfile && git fetch --tags --force && git checkout latest
 ```
 
 Then re-run the copy command for your runtime:
@@ -57,7 +57,7 @@ rm -rf ~/.codex/skills/fecfile && cp -r ~/agent-fecfile/skills/fecfile ~/.codex/
 
 To pin a specific version instead:
 ```bash
-cd ~/agent-fecfile && git fetch && git checkout 1.0.0
+cd ~/agent-fecfile && git fetch --tags --force && git checkout 1.0.1
 # Then re-run the copy command above
 ```
 
