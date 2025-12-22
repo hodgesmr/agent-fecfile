@@ -38,6 +38,26 @@ This repo contains an Agent Skill for analyzing FEC (Federal Election Commission
 - Validate changes manually by running the script with a known filing ID.
 - For large filings, verify `--summary-only` or `--stream` behavior to avoid memory issues.
 
+## Releases
+
+Releases use semver tags (e.g., `1.0.0`) plus a `latest` tag that always points to the most recent stable release.
+
+### Release Process
+
+1. Update the version in `skills/fecfile/SKILL.md` frontmatter:
+   ```yaml
+   metadata:
+     author: Matt Hodges
+     version: "1.1.0"
+   ```
+2. Commit the version bump
+3. Run the release script:
+   ```bash
+   ./release.sh
+   ```
+
+The script extracts the version from SKILL.md, creates the version tag, updates the `latest` tag, and pushes both.
+
 ## Acknowledgments
 
 - Built on the [fecfile](https://github.com/esonderegger/fecfile) library by Evan Sonderegger
