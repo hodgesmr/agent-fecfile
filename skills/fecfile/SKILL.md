@@ -26,19 +26,19 @@ If this command fails or `uv` is not found, do not proceed. Instead, inform the 
 
 ## Quick Start
 
-To analyze an FEC filing, use the helper script:
-
+**Always start by checking the filing size:**
 ```bash
-uv run scripts/fetch_filing.py <FILING_ID> [options]
+uv run scripts/fetch_filing.py <FILING_ID> --summary-only
 ```
 
-Examples:
+Based on the summary, decide how to proceed—see **Handling Large Filings** below for filtering and streaming strategies. Small filings can be fetched directly; large filings require pre-filtering or streaming.
+
+**Fetching data:**
 ```bash
-uv run scripts/fetch_filing.py 1896830                   # Full filing
-uv run scripts/fetch_filing.py 1896830 --summary-only    # Summary only
-uv run scripts/fetch_filing.py 1896830 --schedule A      # Only contributions
-uv run scripts/fetch_filing.py 1896830 --schedule B      # Only disbursements
-uv run scripts/fetch_filing.py 1896830 --schedules A,B   # Multiple schedules
+uv run scripts/fetch_filing.py <FILING_ID>                   # Full filing (small filings only)
+uv run scripts/fetch_filing.py <FILING_ID> --schedule A      # Only contributions
+uv run scripts/fetch_filing.py <FILING_ID> --schedule B      # Only disbursements
+uv run scripts/fetch_filing.py <FILING_ID> --schedules A,B   # Multiple schedules
 ```
 
 The `fecfile` library is installed automatically by uv.
@@ -46,22 +46,6 @@ The `fecfile` library is installed automatically by uv.
 ## Handling Large Filings
 
 FEC filings vary enormously in size. Small filings (like state party monthly reports) may have only a few dozen itemizations and can be used directly. However, major committees like ActBlue, WinRed, and presidential campaigns can have hundreds of thousands of itemizations in a single filing. **Do not dump large filing data directly into the context window.**
-
-### Pre-Filtering at Parse Time
-
-Use CLI flags to filter before data is loaded into memory:
-
-| Flag | Effect |
-|------|--------|
-| `--summary-only` | Only filing summary (no itemizations) |
-| `--schedule A` | Only Schedule A (contributions) |
-| `--schedule B` | Only Schedule B (disbursements) |
-| `--schedule C` | Only Schedule C (loans) |
-| `--schedule D` | Only Schedule D (debts) |
-| `--schedule E` | Only Schedule E (independent expenditures) |
-| `--schedules A,B` | Multiple schedules (comma-separated) |
-
-Schedules you don't request are never parsed.
 
 ### Checking Size
 
@@ -103,6 +87,22 @@ print(f'Schedule A: {count} items')
 ```
 
 If itemization counts are in the hundreds or more, you must post-filter before presenting results. Even smaller filings may benefit from post-filtering to aggregate or focus the output.
+
+### Pre-Filtering at Parse Time
+
+Use CLI flags to filter before data is loaded into memory:
+
+| Flag | Effect |
+|------|--------|
+| `--summary-only` | Only filing summary (no itemizations) |
+| `--schedule A` | Only Schedule A (contributions) |
+| `--schedule B` | Only Schedule B (disbursements) |
+| `--schedule C` | Only Schedule C (loans) |
+| `--schedule D` | Only Schedule D (debts) |
+| `--schedule E` | Only Schedule E (independent expenditures) |
+| `--schedules A,B` | Multiple schedules (comma-separated) |
+
+Schedules you don't request are never parsed.
 
 ### Post-Filtering with Pandas
 
