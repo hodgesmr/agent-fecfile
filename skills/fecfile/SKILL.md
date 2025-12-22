@@ -3,7 +3,7 @@ name: fecfile
 description: Analyze FEC (Federal Election Commission) campaign finance filings. Use when working with FEC filing IDs, campaign finance data, contributions, disbursements, or political committee financial reports.
 metadata:
   author: Matt Hodges
-  version: "1.0.2"
+  version: "1.0.3"
 ---
 
 # FEC Filing Analysis
