@@ -2,7 +2,7 @@
 
 An [Agent Skill](https://agentskills.io) for analyzing Federal Election Commission (FEC) campaign finance filings.
 
-This skill was originally ported from Derek Willis's [llm-fecfile](https://github.com/dwillis/llm-fecfile), an LLM plugin that provides FEC filing analysis as fragments for Simon Willison's [LLM](https://llm.datasette.io/) CLI tool. The core functionality and field mapping guidance have been adapted into the Agent Skill format, making FEC data analysis available directly within agent sessions. I wrote about that initial process [here](https://matthodges.com/posts/2025-12-19-ai-agent-fec/).
+This skill enables AI agents to fetch, parse, and analyze FEC filings directly within agent sessions. It includes detailed field mappings for common form types and schedules, helping agents accurately interpret campaign finance data like contributions, disbursements, and committee information. You can read more about how this skill was built [here](https://matthodges.com/posts/2025-12-19-ai-agent-fec/).
 
 > [!NOTE]
 > This Skill requires network access to fetch data from the FEC (`docquery.fec.gov`). It will not work in environments where external network access is restricted.
@@ -19,6 +19,9 @@ This skill was originally ported from Derek Willis's [llm-fecfile](https://githu
 - An agent runtime that supports Agent Skills (e.g., [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) or [Codex CLI](https://developers.openai.com/codex/cli/))
 - [uv](https://docs.astral.sh/uv/) (for running the fetch script)
 - Python 3.9+
+
+> [!TIP]
+> For best results, use the most capable models available in your agent runtime (e.g., Claude Opus 4.5 or comparable frontier models). More capable models produce better analysis and more accurate field interpretations.
 
 ## Installation (Global)
 
