@@ -2,7 +2,7 @@
 
 An [Agent Skill](https://agentskills.io) for analyzing Federal Election Commission (FEC) campaign finance filings.
 
-This skill enables AI agents to fetch, parse, and analyze FEC filings directly within agent sessions. It includes detailed field mappings for common form types and schedules, helping agents accurately interpret campaign finance data like contributions, disbursements, and committee information. You can read more about how this skill was built [here](https://matthodges.com/posts/2025-12-19-ai-agent-fec/).
+This skill enables AI agents to fetch, parse, and analyze FEC filings directly within agent sessions. Parsing and filtering happen outside the model context, allowing agents to programmatically reduce large filings before analysis, saving tokens and enabling efficient queries against filings of any size. The skill includes detailed field mappings for common form types and schedules, helping agents accurately interpret campaign finance data like contributions, disbursements, and committee information. You can read more about how this skill was built [here](https://matthodges.com/posts/2025-12-19-ai-agent-fec/).
 
 > [!NOTE]
 > This Skill requires network access to fetch data from the FEC (`docquery.fec.gov`). It will not work in environments where external network access is restricted.
