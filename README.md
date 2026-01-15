@@ -25,43 +25,32 @@ This skill enables AI agents to fetch, parse, and analyze FEC filings directly w
 
 ## Installation (Global)
 
-Clone the repository and copy the skill into your runtime's skills directory.
+Clone the repository to a permanent location and symlink the skill into your runtime's skills directory.
 
 ```bash
 git clone --branch latest git@github.com:hodgesmr/agent-fecfile.git ~/agent-fecfile
 ```
 
-**Copy to your runtime's skills directory:**
+**Symlink to your runtime's skills directory:**
 ```bash
 # Claude Code CLI
-cp -r ~/agent-fecfile/skills/fecfile ~/.claude/skills/fecfile
+ln -s ~/agent-fecfile/skills/fecfile ~/.claude/skills/fecfile
 
 # Codex CLI
-cp -r ~/agent-fecfile/skills/fecfile ~/.codex/skills/fecfile
+ln -s ~/agent-fecfile/skills/fecfile ~/.codex/skills/fecfile
 ```
 
 Replace the target path with your runtime's skill directory as needed.
 
 ## Updating
 
-Fetch the latest tag and re-copy:
 ```bash
 cd ~/agent-fecfile && git fetch --tags --force && git checkout latest
 ```
 
-Then re-run the copy command for your runtime:
+Or pin a specific version:
 ```bash
-# Claude Code CLI
-rm -rf ~/.claude/skills/fecfile && cp -r ~/agent-fecfile/skills/fecfile ~/.claude/skills/fecfile
-
-# Codex CLI
-rm -rf ~/.codex/skills/fecfile && cp -r ~/agent-fecfile/skills/fecfile ~/.codex/skills/fecfile
-```
-
-To pin a specific version instead:
-```bash
-cd ~/agent-fecfile && git fetch --tags --force && git checkout 1.0.1
-# Then re-run the copy command above
+cd ~/agent-fecfile && git fetch && git checkout 1.0.0
 ```
 
 ## Usage
