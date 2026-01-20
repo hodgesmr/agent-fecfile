@@ -17,7 +17,7 @@ This skill enables AI agents to fetch, parse, and analyze FEC filings directly w
 ## Requirements
 
 - An agent runtime that supports Agent Skills (e.g., [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) or [Codex CLI](https://developers.openai.com/codex/cli/))
-- [uv](https://docs.astral.sh/uv/) (for running the fetch script)
+- [uv](https://docs.astral.sh/uv/) (This skill uses `uv run` to manage its own dependencies in isolation, keeping your system Python clean)
 - Python 3.9+
 
 > [!TIP]
@@ -31,16 +31,16 @@ Clone the repository to a permanent location and symlink the skill into your run
 git clone --branch latest git@github.com:hodgesmr/agent-fecfile.git ~/agent-fecfile
 ```
 
-**Symlink to your runtime's skills directory:**
+**Symlink to your agent's skills directory:**
 ```bash
 # Claude Code CLI
-ln -s ~/agent-fecfile/skills/fecfile ~/.claude/skills/fecfile
+ln -sfn ~/agent-fecfile/skills/fecfile ~/.claude/skills/fecfile
 
 # Codex CLI
-ln -s ~/agent-fecfile/skills/fecfile ~/.codex/skills/fecfile
+ln -sfn ~/agent-fecfile/skills/fecfile ~/.codex/skills/fecfile
 ```
 
-Replace the target path with your runtime's skill directory as needed.
+Replace the target path with your agent runtime's skill directory as needed.
 
 ## Updating
 
