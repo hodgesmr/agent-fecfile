@@ -17,7 +17,7 @@ This skill enables AI agents to fetch, parse, and analyze FEC filings directly w
 ## Requirements
 
 - An agent runtime that supports Agent Skills (e.g., [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) or [Codex CLI](https://developers.openai.com/codex/cli/))
-- [uv](https://docs.astral.sh/uv/) (This skill uses `uv run` to manage its own dependencies in isolation, keeping your system Python clean)
+- [uv](https://docs.astral.sh/uv/) (This skill uses `uv` to manage its own dependencies in isolation)
 - Python 3.9+
 
 > [!TIP]
