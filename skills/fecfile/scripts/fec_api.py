@@ -3,20 +3,26 @@
 # requires-python = ">=3.9"
 # dependencies = [
 #     "requests>=2.28.0",
+#     "keyring>=24.0.0",
 # ]
 # ///
 """
 FEC API client with secure credential handling.
 
 This module uses the authenticated FEC API at api.open.fec.gov.
-API keys are retrieved securely via credential helper (macOS Keychain by default).
+API keys are retrieved securely via the system keyring (cross-platform).
 
-Setup (macOS):
-    # Store your FEC API key in the Keychain:
-    security add-generic-password -s "fec-api" -a "api-key" -w "YOUR_API_KEY_HERE"
+Supported backends:
+    - macOS: Keychain
+    - Windows: Credential Manager
+    - Linux: Secret Service (GNOME Keyring, KWallet) or encrypted file
 
-    # To update an existing key:
-    security add-generic-password -U -s "fec-api" -a "api-key" -w "NEW_API_KEY"
+Setup:
+    # Store your FEC API key (interactive prompt):
+    python -c "import keyring; keyring.set_password('fec-api', 'api-key', input('API Key: '))"
+
+    # Or via CLI (if keyring CLI is installed):
+    keyring set fec-api api-key
 
 Usage:
     uv run fec_api.py search-committees "Biden"
@@ -31,11 +37,12 @@ import subprocess
 import sys
 from typing import Optional
 
+import keyring
 import requests
 
 FEC_API_BASE = "https://api.open.fec.gov/v1"
-KEYCHAIN_SERVICE = "fec-api"
-KEYCHAIN_ACCOUNT = "api-key"
+KEYRING_SERVICE = "fec-api"
+KEYRING_USERNAME = "api-key"
 
 
 class CredentialError(Exception):
@@ -44,19 +51,23 @@ class CredentialError(Exception):
     pass
 
 
-def get_api_key_from_keychain(
-    service: str = KEYCHAIN_SERVICE, account: str = KEYCHAIN_ACCOUNT
+def get_api_key_from_keyring(
+    service: str = KEYRING_SERVICE, username: str = KEYRING_USERNAME
 ) -> str:
     """
-    Retrieve the FEC API key from macOS Keychain.
+    Retrieve the FEC API key from the system keyring.
 
-    This uses the macOS `security` command to access the Keychain.
-    The user may be prompted to allow access if the keychain item
-    requires authorization.
+    Uses the `keyring` library which provides cross-platform access to:
+    - macOS Keychain
+    - Windows Credential Manager
+    - Linux Secret Service (GNOME Keyring, KWallet)
+    - Encrypted file fallback
+
+    The user may be prompted to unlock the keyring if it's locked.
 
     Args:
-        service: Keychain service name (default: "fec-api")
-        account: Keychain account name (default: "api-key")
+        service: Keyring service name (default: "fec-api")
+        username: Keyring username/account (default: "api-key")
 
     Returns:
         The API key string
@@ -65,43 +76,29 @@ def get_api_key_from_keychain(
         CredentialError: If the key cannot be retrieved
     """
     try:
-        result = subprocess.run(
-            [
-                "security",
-                "find-generic-password",
-                "-s",
-                service,
-                "-a",
-                account,
-                "-w",  # Output only the password
-            ],
-            capture_output=True,
-            text=True,
-            timeout=30,  # Allow time for user interaction
-        )
+        api_key = keyring.get_password(service, username)
 
-        if result.returncode != 0:
-            stderr = result.stderr.strip()
-            if "could not be found" in stderr or "SecKeychainSearchCopyNext" in stderr:
-                raise CredentialError(
-                    f"FEC API key not found in Keychain.\n"
-                    f"Add it with:\n"
-                    f'  security add-generic-password -s "{service}" -a "{account}" -w "YOUR_API_KEY"'
-                )
-            raise CredentialError(f"Keychain access failed: {stderr}")
+        if api_key is None:
+            raise CredentialError(
+                f"FEC API key not found in system keyring.\n"
+                f"Add it with:\n"
+                f"  python -c \"import keyring; keyring.set_password('{service}', '{username}', input('API Key: '))\"\n"
+                f"Or:\n"
+                f"  keyring set {service} {username}"
+            )
 
-        api_key = result.stdout.strip()
         if not api_key:
-            raise CredentialError("Retrieved empty API key from Keychain")
+            raise CredentialError("Retrieved empty API key from keyring")
 
         return api_key
 
-    except subprocess.TimeoutExpired:
-        raise CredentialError("Keychain access timed out (user interaction required?)")
-    except FileNotFoundError:
+    except keyring.errors.KeyringError as e:
+        raise CredentialError(f"Keyring access failed: {e}")
+    except keyring.errors.InitError as e:
         raise CredentialError(
-            "macOS 'security' command not found. "
-            "This credential helper only works on macOS."
+            f"Failed to initialize keyring backend: {e}\n"
+            "On Linux, ensure a Secret Service provider is running "
+            "(e.g., gnome-keyring-daemon or kwallet)."
         )
 
 
@@ -111,7 +108,7 @@ def get_api_key(credential_cmd: Optional[str] = None) -> str:
 
     Resolution order:
     1. Custom credential command (if provided)
-    2. macOS Keychain (default)
+    2. System keyring (default)
 
     Args:
         credential_cmd: Optional shell command that outputs the API key
@@ -142,7 +139,7 @@ def get_api_key(credential_cmd: Optional[str] = None) -> str:
         except subprocess.TimeoutExpired:
             raise CredentialError("Credential command timed out")
 
-    return get_api_key_from_keychain()
+    return get_api_key_from_keyring()
 
 
 def search_committees(
@@ -198,8 +195,11 @@ def main():
         description="Query the FEC API with secure credential handling.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
-Setup (macOS Keychain):
-  security add-generic-password -s "fec-api" -a "api-key" -w "YOUR_API_KEY"
+Setup (cross-platform):
+  python -c "import keyring; keyring.set_password('fec-api', 'api-key', input('API Key: '))"
+
+Or with keyring CLI:
+  keyring set fec-api api-key
 
 Get an API key at: https://api.data.gov/signup/
 """,
@@ -209,7 +209,7 @@ Get an API key at: https://api.data.gov/signup/
         "--credential-cmd",
         type=str,
         metavar="CMD",
-        help="Shell command to retrieve API key (default: macOS Keychain)",
+        help="Shell command to retrieve API key (default: system keyring)",
     )
 
     subparsers = parser.add_subparsers(dest="command", required=True)
