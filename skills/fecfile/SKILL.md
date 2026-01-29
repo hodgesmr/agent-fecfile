@@ -184,46 +184,80 @@ This processes hundreds of thousands of records using constant memory.
 4. **Streaming mode** - Use `--stream` with inline Python consumers for constant-memory processing
 5. **Limit output** - Use `.head()`, `.nlargest()`, `.nsmallest()` to cap results
 
-## Finding Filing IDs
+## Finding Filings by Candidate/Committee Name
 
-Filing IDs can be found via:
-1. **FEC Website**: Visit [fec.gov](https://www.fec.gov) and search for a committee
-2. **Direct URLs**: Filing IDs appear in URLs like `https://docquery.fec.gov/dcdev/posted/1690664.fec`
-3. **FEC API**: Use `fec_api.py` to search for committees (see below), or the [FEC API directly](https://api.open.fec.gov/developers/)
+When the user asks about a candidate or committee's filings without providing a filing ID, use `fec_api.py` to discover the filing ID. This requires the user to have set up an API key (see README).
 
-## FEC API (Authenticated)
+### Workflow
 
-The `fec_api.py` script provides access to the authenticated FEC API at `api.open.fec.gov`. This requires the user to have set up an API key in their system keyring (see README for setup).
+1. **Search for the committee** → get committee ID
+2. **Get filings for that committee** → get filing ID(s)
+3. **Fetch and analyze the filing** → use `fetch_filing.py`
 
-### Search for Committees
+### Example: "Show me Kamala Harris's most recent FEC expenditures"
 
+**Step 1: Find the committee**
 ```bash
-uv run scripts/fec_api.py search-committees "ActBlue"
-uv run scripts/fec_api.py search-committees "Biden" --limit 5
+uv run scripts/fec_api.py search-committees "Harris"
+```
+```json
+[
+  {"id": "C00703975", "name": "HARRIS FOR PRESIDENT", "is_active": true},
+  {"id": "C00494740", "name": "KAMALA HARRIS FOR THE PEOPLE", "is_active": false}
+]
 ```
 
-**Output format:**
+**Step 2: Get recent filings**
+```bash
+uv run scripts/fec_api.py get-filings C00703975 --limit 5
+```
 ```json
 [
   {
-    "id": "C00401224",
-    "name": "ACTBLUE",
-    "is_active": true
+    "filing_id": 1896543,
+    "form_type": "F3P",
+    "receipt_date": "2025-01-15",
+    "coverage_start_date": "2024-12-01",
+    "coverage_end_date": "2024-12-31",
+    "total_receipts": 5000000,
+    "total_disbursements": 4500000,
+    "amendment_indicator": null
   }
 ]
 ```
 
-The `id` field is the FEC committee ID (e.g., "C00401224") which can be used to look up filings.
+**Step 3: Analyze the filing**
+```bash
+uv run scripts/fetch_filing.py 1896543 --schedule B
+```
+
+### Command Reference
+
+**Search for committees by name:**
+```bash
+uv run scripts/fec_api.py search-committees "QUERY" [--limit N]
+```
+
+**Get filings for a committee:**
+```bash
+uv run scripts/fec_api.py get-filings COMMITTEE_ID [--limit N] [--form-type TYPE]
+```
+
+Form types: `F3` (House/Senate), `F3P` (Presidential), `F3X` (PACs/Parties)
 
 ### Custom Credential Commands
 
 If the user has configured an alternative secret store, they may ask you to use `--credential-cmd`:
 
 ```bash
-uv run scripts/fec_api.py --credential-cmd "CMD" search-committees "Biden"
+uv run scripts/fec_api.py --credential-cmd "CMD" search-committees "Harris"
 ```
 
-The user will provide the specific command for their secret store (e.g., Vault, 1Password, pass)
+## Finding Filing IDs (Manual)
+
+If the FEC API is not set up, filing IDs can be found via:
+1. **FEC Website**: Visit [fec.gov](https://www.fec.gov) and search for a committee
+2. **Direct URLs**: Filing IDs appear in URLs like `https://docquery.fec.gov/dcdev/posted/1690664.fec`
 
 ## Response Style
 
