@@ -194,7 +194,7 @@ When the user asks about a candidate or committee's filings without providing a 
 2. **Get filings for that committee** → get filing ID(s)
 3. **Fetch and analyze the filing** → use `fetch_filing.py`
 
-### Example: "Show me Kamala Harris's most recent FEC expenditures"
+### Example: "What are the top 10 expenditures in Kamala Harris's most recent filing?"
 
 **Step 1: Find the committee**
 ```bash
@@ -209,7 +209,7 @@ uv run scripts/fec_api.py search-committees "Harris"
 
 **Step 2: Get recent filings**
 ```bash
-uv run scripts/fec_api.py get-filings C00703975 --limit 5
+uv run scripts/fec_api.py get-filings C00703975 --limit 3
 ```
 ```json
 [
@@ -226,9 +226,28 @@ uv run scripts/fec_api.py get-filings C00703975 --limit 5
 ]
 ```
 
-**Step 3: Analyze the filing**
+**Step 3: Check filing size** (presidential campaigns are large)
 ```bash
-uv run scripts/fetch_filing.py 1896543 --schedule B
+uv run scripts/fetch_filing.py 1896543 --summary-only
+```
+
+**Step 4: Post-filter to get top 10 expenditures**
+```bash
+cat > /tmp/top_expenditures.py << 'EOF'
+# /// script
+# requires-python = ">=3.9"
+# dependencies = ["pandas>=2.3.0"]
+# ///
+import json, sys
+import pandas as pd
+
+data = json.load(sys.stdin)
+df = pd.DataFrame(data.get('itemizations', {}).get('Schedule B', []))
+top10 = df.nlargest(10, 'disbursement_amount')[['recipient_name', 'disbursement_amount', 'disbursement_description', 'disbursement_date']]
+print(top10.to_string())
+EOF
+
+uv run scripts/fetch_filing.py 1896543 --schedule B 2>&1 | uv run /tmp/top_expenditures.py
 ```
 
 ### Command Reference
