@@ -193,49 +193,10 @@ Filing IDs can be found via:
 
 ## FEC API (Authenticated)
 
-The `fec_api.py` script provides access to the authenticated FEC API at `api.open.fec.gov`. This API requires an API key and provides additional search capabilities beyond what's available through public filing data.
+The `fec_api.py` script provides access to the authenticated FEC API at `api.open.fec.gov`. This requires the user to have set up an API key in their system keyring (see README for setup).
 
-### Getting an API Key
+### Search for Committees
 
-1. Visit https://api.data.gov/signup/
-2. Fill out the form to receive your API key via email
-3. Store the key securely using one of the methods below
-
-### Credential Setup
-
-API keys are retrieved securely via the system keyring. This prevents secrets from being exposed in environment variables or files that could be read inadvertently.
-
-**Supported platforms:**
-- **macOS**: Keychain
-- **Windows**: Credential Manager
-- **Linux**: Secret Service (GNOME Keyring, KWallet)
-
-#### Store your API key (one-time setup)
-
-Using Python (cross-platform):
-```bash
-python -c "import keyring; keyring.set_password('fec-api', 'api-key', input('API Key: '))"
-```
-
-Using the keyring CLI (if installed):
-```bash
-keyring set fec-api api-key
-```
-
-Using macOS Keychain directly:
-```bash
-security add-generic-password -s "fec-api" -a "api-key" -w "YOUR_API_KEY_HERE"
-```
-
-#### Verify your key is stored
-
-```bash
-python -c "import keyring; print('Key found' if keyring.get_password('fec-api', 'api-key') else 'Not found')"
-```
-
-### Usage
-
-**Search for committees by name:**
 ```bash
 uv run scripts/fec_api.py search-committees "ActBlue"
 uv run scripts/fec_api.py search-committees "Biden" --limit 5
@@ -256,47 +217,15 @@ uv run scripts/fec_api.py search-committees "Biden" --limit 5
 ]
 ```
 
-### Alternative Secret Stores
+### Custom Credential Commands
 
-For users with existing secret management infrastructure (HashiCorp Vault, 1Password, AWS Secrets Manager, etc.), use `--credential-cmd` to specify a shell command that outputs the API key:
+If the user has configured an alternative secret store, they may ask you to use `--credential-cmd`:
 
 ```bash
-# HashiCorp Vault
-uv run scripts/fec_api.py --credential-cmd "vault kv get -field=api_key secret/fec" search-committees "Biden"
-
-# 1Password CLI
-uv run scripts/fec_api.py --credential-cmd "op read 'op://Private/FEC API/credential'" search-committees "Biden"
-
-# AWS Secrets Manager
-uv run scripts/fec_api.py --credential-cmd "aws secretsmanager get-secret-value --secret-id fec-api --query SecretString --output text" search-committees "Biden"
-
-# pass (Unix password manager)
-uv run scripts/fec_api.py --credential-cmd "pass show fec/api-key" search-committees "Biden"
-
-# Bitwarden CLI
-uv run scripts/fec_api.py --credential-cmd "bw get password fec-api-key" search-committees "Biden"
+uv run scripts/fec_api.py --credential-cmd "CMD" search-committees "Biden"
 ```
 
-### Linux Notes
-
-On Linux systems without a graphical environment, the keyring library may not find a Secret Service provider. Options:
-
-1. **Install a Secret Service provider**: `gnome-keyring` or `kwallet`
-2. **Use the encrypted file backend**: Set `PYTHON_KEYRING_BACKEND=keyrings.alt.file.EncryptedKeyring` (will prompt for a master password)
-3. **Use `--credential-cmd`**: Point to your preferred secret store
-
-### Troubleshooting
-
-**"FEC API key not found in system keyring"**
-- Verify the key is stored: `python -c "import keyring; print(keyring.get_password('fec-api', 'api-key'))"`
-- Re-add the key using the setup instructions above
-
-**"Failed to initialize keyring backend" (Linux)**
-- Ensure a Secret Service provider is running, or use `--credential-cmd`
-
-**API returns 403 Forbidden**
-- Your API key may be invalid or expired
-- Request a new key at https://api.data.gov/signup/
+The user will provide the specific command for their secret store (e.g., Vault, 1Password, pass)
 
 ## Response Style
 
