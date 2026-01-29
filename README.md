@@ -138,18 +138,90 @@ Once installed, ask your agent to analyze FEC filings:
 
 1. **FEC Website**: Visit [fec.gov](https://www.fec.gov) and search for a committee
 2. **Direct URLs**: Filing IDs appear in URLs like `https://docquery.fec.gov/dcdev/posted/1690664.fec`
-3. **FEC API**: Use the [FEC API](https://api.open.fec.gov/developers/)
+3. **FEC API**: Use `fec_api.py` to search for committees (requires API key setup below)
+
+## FEC API Setup (Optional)
+
+The skill includes `fec_api.py` for searching committees via the authenticated FEC API. This is optional—the core filing analysis works without it.
+
+### 1. Get an API Key
+
+1. Visit https://api.open.fec.gov/developers/
+2. Click "Get an API Key" and fill out the form
+3. You'll receive your API key via email
+
+### 2. Store Your API Key
+
+API keys are stored securely in your system keyring, not in environment variables or files.
+
+**Using Python (cross-platform):**
+```bash
+python -c "import keyring; keyring.set_password('fec-api', 'api-key', input('API Key: '))"
+```
+
+**Using the keyring CLI:**
+```bash
+keyring set fec-api api-key
+```
+
+**Using macOS Keychain directly:**
+```bash
+security add-generic-password -s "fec-api" -a "api-key" -w "YOUR_API_KEY_HERE"
+```
+
+**Verify your key is stored:**
+```bash
+python -c "import keyring; print('Key found' if keyring.get_password('fec-api', 'api-key') else 'Not found')"
+```
+
+### Alternative Secret Stores
+
+If you use a secret manager like HashiCorp Vault, 1Password, or AWS Secrets Manager, you can use `--credential-cmd` to retrieve your API key:
+
+```bash
+# HashiCorp Vault
+uv run scripts/fec_api.py --credential-cmd "vault kv get -field=api_key secret/fec" search-committees "Biden"
+
+# 1Password CLI
+uv run scripts/fec_api.py --credential-cmd "op read 'op://Private/FEC API/credential'" search-committees "Biden"
+
+# AWS Secrets Manager
+uv run scripts/fec_api.py --credential-cmd "aws secretsmanager get-secret-value --secret-id fec-api --query SecretString --output text" search-committees "Biden"
+
+# pass (Unix password manager)
+uv run scripts/fec_api.py --credential-cmd "pass show fec/api-key" search-committees "Biden"
+
+# Bitwarden CLI
+uv run scripts/fec_api.py --credential-cmd "bw get password fec-api-key" search-committees "Biden"
+```
+
+### Linux Notes
+
+On Linux systems without a graphical environment, the keyring library may not find a Secret Service provider. Options:
+
+1. **Install a Secret Service provider**: `gnome-keyring` or `kwallet`
+2. **Use the encrypted file backend**: `PYTHON_KEYRING_BACKEND=keyrings.alt.file.EncryptedKeyring` (prompts for master password)
+3. **Use `--credential-cmd`**: Point to your preferred secret store
+
+### Troubleshooting
+
+| Error | Solution |
+|-------|----------|
+| "FEC API key not found in system keyring" | Re-add your key using the setup instructions above |
+| "Failed to initialize keyring backend" (Linux) | Install a Secret Service provider or use `--credential-cmd` |
+| API returns 403 Forbidden | Your API key may be invalid—request a new one |
 
 ## Skill Structure
 
 ```
 skills/fecfile/
-├── SKILL.md           # Main skill instructions
+├── SKILL.md            # Main skill instructions
 ├── references/
 │   ├── FORMS.md        # Form type reference (F1, F2, F3, F99)
 │   └── SCHEDULES.md    # Schedule field mappings (A, B, C, D, E)
 └── scripts/
-    └── fetch_filing.py  # Fetches FEC data
+    ├── fetch_filing.py # Fetches FEC filing data (public API)
+    └── fec_api.py      # Committee search (authenticated API)
 ```
 
 ## Manual Script Usage
