@@ -28,7 +28,7 @@ Usage:
     uv run fec_api.py search-committees "Biden"
     uv run fec_api.py search-committees "ActBlue" --limit 5
 
-Get an API key at: https://api.data.gov/signup/
+Get an API key at: https://api.open.fec.gov/developers/
 """
 
 import argparse
@@ -148,26 +148,15 @@ def search_committees(
     limit: int = 20,
 ) -> list[dict]:
     """
-    Search for FEC committees by name.
+    Search for FEC committees by name using the typeahead endpoint.
 
     Args:
         query: Search term (committee name or partial name)
         api_key: FEC API key
-        limit: Maximum number of results (default: 20, max: 100)
+        limit: Maximum number of results (default: 20)
 
     Returns:
-        List of committee records, each containing:
-        - committee_id: The FEC committee ID (e.g., "C00401224")
-        - name: Committee name
-        - treasurer_name: Name of the treasurer
-        - committee_type: Type code (e.g., "P" for Presidential)
-        - committee_type_full: Full type description
-        - designation: Designation code
-        - designation_full: Full designation description
-        - party: Party affiliation code
-        - party_full: Full party name
-        - state: State code
-        - cycles: List of election cycles
+        List of committee records from /v1/names/committees/
 
     Raises:
         requests.RequestException: On API errors
@@ -175,19 +164,18 @@ def search_committees(
     params = {
         "api_key": api_key,
         "q": query,
-        "per_page": min(limit, 100),
-        "sort": "-last_file_date",
     }
 
     response = requests.get(
-        f"{FEC_API_BASE}/committees/",
+        f"{FEC_API_BASE}/names/committees/",
         params=params,
         timeout=30,
     )
     response.raise_for_status()
 
     data = response.json()
-    return data.get("results", [])
+    results = data.get("results", [])
+    return results[:limit]
 
 
 def main():
@@ -201,7 +189,7 @@ Setup (cross-platform):
 Or with keyring CLI:
   keyring set fec-api api-key
 
-Get an API key at: https://api.data.gov/signup/
+Get an API key at: https://api.open.fec.gov/developers/
 """,
     )
 
@@ -247,21 +235,7 @@ Get an API key at: https://api.data.gov/signup/
                 print(f"No committees found matching '{args.query}'", file=sys.stderr)
                 sys.exit(0)
 
-            # Output simplified view for CLI, full JSON available via module import
-            output = []
-            for r in results:
-                output.append(
-                    {
-                        "committee_id": r.get("committee_id"),
-                        "name": r.get("name"),
-                        "committee_type_full": r.get("committee_type_full"),
-                        "designation_full": r.get("designation_full"),
-                        "party_full": r.get("party_full"),
-                        "state": r.get("state"),
-                        "treasurer_name": r.get("treasurer_name"),
-                    }
-                )
-            print(json.dumps(output, indent=2))
+            print(json.dumps(results, indent=2))
 
     except requests.RequestException as e:
         print(f"API error: {e}", file=sys.stderr)
