@@ -206,16 +206,14 @@ uv run scripts/fec_api.py search-committees "Biden" --limit 5
 ```json
 [
   {
-    "committee_id": "C00401224",
+    "id": "C00401224",
     "name": "ACTBLUE",
-    "committee_type_full": "Independent Expenditor (Person or Group)",
-    "designation_full": "Unauthorized",
-    "party_full": null,
-    "state": "MA",
-    "treasurer_name": "ERIN HILL"
+    "is_active": true
   }
 ]
 ```
+
+The `id` field is the FEC committee ID (e.g., "C00401224") which can be used to look up filings.
 
 ### Custom Credential Commands
 
