@@ -152,26 +152,45 @@ The skill includes `fec_api.py` for searching committees via the authenticated F
 
 ### 2. Store Your API Key
 
-API keys are stored securely in your system keyring, not in environment variables or files.
+API keys are stored in your system keyring. **Important:** Create the key manually (not via Python) so that the OS prompts for approval when scripts access it.
 
-**Using Python (cross-platform):**
-```bash
-python -c "import keyring; keyring.set_password('fec-api', 'api-key', input('API Key: '))"
-```
+#### macOS
 
-**Using the keyring CLI:**
-```bash
-keyring set fec-api api-key
-```
+**Option A: Using Keychain Access (GUI)**
+1. Open Keychain Access (Applications → Utilities → Keychain Access)
+2. Click File → New Password Item (or press ⌘N)
+3. Fill in:
+   - Keychain Item Name: `fec-api`
+   - Account Name: `api-key`
+   - Password: *your API key*
+4. Click Add
 
-**Using macOS Keychain directly:**
+**Option B: Using Terminal**
 ```bash
 security add-generic-password -s "fec-api" -a "api-key" -w "YOUR_API_KEY_HERE"
 ```
 
-**Verify your key is stored:**
+The first time the script accesses the key, macOS will prompt you to allow access.
+
+#### Windows
+
+1. Open Credential Manager (search "Credential Manager" in Start)
+2. Click "Windows Credentials"
+3. Click "Add a generic credential"
+4. Fill in:
+   - Internet or network address: `fec-api`
+   - User name: `api-key`
+   - Password: *your API key*
+
+#### Linux
+
+Use your distribution's secret manager (GNOME Keyring, KWallet) or `--credential-cmd` with your preferred secret store.
+
+#### Verify your key is stored
+
 ```bash
-python -c "import keyring; print('Key found' if keyring.get_password('fec-api', 'api-key') else 'Not found')"
+# macOS
+security find-generic-password -s "fec-api" -a "api-key" -w
 ```
 
 ### Alternative Secret Stores

@@ -12,17 +12,8 @@ FEC API client with secure credential handling.
 This module uses the authenticated FEC API at api.open.fec.gov.
 API keys are retrieved securely via the system keyring (cross-platform).
 
-Supported backends:
-    - macOS: Keychain
-    - Windows: Credential Manager
-    - Linux: Secret Service (GNOME Keyring, KWallet) or encrypted file
-
-Setup:
-    # Store your FEC API key (interactive prompt):
-    python -c "import keyring; keyring.set_password('fec-api', 'api-key', input('API Key: '))"
-
-    # Or via CLI (if keyring CLI is installed):
-    keyring set fec-api api-key
+Setup: See README.md for instructions on storing your API key securely.
+       Create the key manually (not via Python) so the OS prompts for approval.
 
 Usage:
     uv run fec_api.py search-committees "Harris"
@@ -224,13 +215,12 @@ def main():
         description="Query the FEC API with secure credential handling.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
-Setup (cross-platform):
-  python -c "import keyring; keyring.set_password('fec-api', 'api-key', input('API Key: '))"
+Setup:
+  See README.md for secure API key storage instructions.
+  Get an API key at: https://api.open.fec.gov/developers/
 
-Or with keyring CLI:
-  keyring set fec-api api-key
-
-Get an API key at: https://api.open.fec.gov/developers/
+macOS quick setup:
+  security add-generic-password -s "fec-api" -a "api-key" -w "YOUR_KEY"
 """,
     )
 
