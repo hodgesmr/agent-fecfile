@@ -25,8 +25,8 @@ Setup:
     keyring set fec-api api-key
 
 Usage:
-    uv run fec_api.py search-committees "Biden"
-    uv run fec_api.py search-committees "ActBlue" --limit 5
+    uv run fec_api.py search-committees "Harris"
+    uv run fec_api.py get-filings C00703975 --limit 5
 
 Get an API key at: https://api.open.fec.gov/developers/
 """
@@ -178,6 +178,47 @@ def search_committees(
     return results[:limit]
 
 
+def get_filings(
+    committee_id: str,
+    api_key: str,
+    limit: int = 10,
+    form_type: Optional[str] = None,
+) -> list[dict]:
+    """
+    Get filings for a committee.
+
+    Args:
+        committee_id: FEC committee ID (e.g., "C00703975")
+        api_key: FEC API key
+        limit: Maximum number of results (default: 10)
+        form_type: Filter by form type (e.g., "F3P", "F3X", "F3")
+
+    Returns:
+        List of filing records, sorted by most recent first
+
+    Raises:
+        requests.RequestException: On API errors
+    """
+    params = {
+        "api_key": api_key,
+        "per_page": min(limit, 100),
+        "sort": "-receipt_date",
+    }
+
+    if form_type:
+        params["form_type"] = form_type
+
+    response = requests.get(
+        f"{FEC_API_BASE}/committee/{committee_id}/filings/",
+        params=params,
+        timeout=30,
+    )
+    response.raise_for_status()
+
+    data = response.json()
+    return data.get("results", [])
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Query the FEC API with secure credential handling.",
@@ -219,6 +260,29 @@ Get an API key at: https://api.open.fec.gov/developers/
         help="Maximum results to return (default: 20)",
     )
 
+    # get-filings subcommand
+    filings_parser = subparsers.add_parser(
+        "get-filings",
+        help="Get filings for a committee",
+    )
+    filings_parser.add_argument(
+        "committee_id",
+        type=str,
+        help="FEC committee ID (e.g., C00703975)",
+    )
+    filings_parser.add_argument(
+        "--limit",
+        type=int,
+        default=10,
+        help="Maximum results to return (default: 10)",
+    )
+    filings_parser.add_argument(
+        "--form-type",
+        type=str,
+        metavar="TYPE",
+        help="Filter by form type (e.g., F3P, F3X, F3)",
+    )
+
     args = parser.parse_args()
 
     try:
@@ -236,6 +300,35 @@ Get an API key at: https://api.open.fec.gov/developers/
                 sys.exit(0)
 
             print(json.dumps(results, indent=2))
+
+        elif args.command == "get-filings":
+            results = get_filings(
+                args.committee_id,
+                api_key,
+                args.limit,
+                args.form_type,
+            )
+
+            if not results:
+                print(f"No filings found for committee '{args.committee_id}'", file=sys.stderr)
+                sys.exit(0)
+
+            # Output key fields for each filing
+            output = []
+            for r in results:
+                output.append(
+                    {
+                        "filing_id": r.get("file_number"),
+                        "form_type": r.get("form_type"),
+                        "receipt_date": r.get("receipt_date"),
+                        "coverage_start_date": r.get("coverage_start_date"),
+                        "coverage_end_date": r.get("coverage_end_date"),
+                        "total_receipts": r.get("total_receipts"),
+                        "total_disbursements": r.get("total_disbursements"),
+                        "amendment_indicator": r.get("amendment_indicator"),
+                    }
+                )
+            print(json.dumps(output, indent=2))
 
     except requests.RequestException as e:
         print(f"API error: {e}", file=sys.stderr)
