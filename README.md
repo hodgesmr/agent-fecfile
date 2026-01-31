@@ -170,14 +170,7 @@ security add-generic-password -s "fec-api" -a "api-key" -w
 
 When the script accesses the key, macOS will prompt you to allow access.
 
-If the OS keyring doesn't contain your key, the script supports injecting the key via `--credential-cmd`. The agent can use a secret manager like 1Password and have the agent inject your API key:
-
-```bash
-# 1Password CLI
-uv run scripts/fec_api.py --credential-cmd "op read 'op://Private/FEC API Key/credential'" search-committees "Utah Republican Party"
-```
-
-Once the key can be injected, queries become more powerful:
+Once your API key is stored, queries become more powerful:
 
 ```text
 ❯ What are the top expenditures in Utah Republican Party's most recent filing?
