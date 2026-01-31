@@ -25,6 +25,7 @@ Get an API key at: https://api.open.fec.gov/developers/
 import argparse
 import json
 import sys
+from typing import Optional
 
 import keyring
 import requests
