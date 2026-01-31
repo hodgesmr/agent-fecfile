@@ -141,6 +141,10 @@ def get_filings(
     api_key: str,
     limit: int = 10,
     form_type: Optional[str] = None,
+    most_recent: bool = True,
+    cycle: Optional[int] = None,
+    report_type: Optional[str] = None,
+    sort: str = "-file_number",
 ) -> list[dict]:
     """
     Get filings for a committee.
@@ -150,9 +154,18 @@ def get_filings(
         api_key: FEC API key
         limit: Maximum number of results (default: 10)
         form_type: Filter by form type (e.g., "F3P", "F3X", "F3")
+        most_recent: Only return current versions, not superseded amendments (default: True)
+        cycle: Filter by two-year election cycle (e.g., 2024)
+        report_type: Filter by report type (e.g., "Q1", "Q2", "MY", "YE", "12G", "30G")
+        sort: Sort field with optional "-" prefix for descending (default: "-file_number").
+              Date/time: receipt_date, coverage_start_date, coverage_end_date, update_date
+              Identifiers: file_number
+              Financial: total_receipts, total_disbursements, total_individual_contributions,
+                  cash_on_hand_end_period, debts_owed_by_committee, debts_owed_to_committee
+              Other: report_year, cycle, election_year, committee_name, candidate_name, pages
 
     Returns:
-        List of filing records, sorted by most recent first
+        List of filing records
 
     Raises:
         requests.RequestException: On API errors
@@ -160,11 +173,16 @@ def get_filings(
     params = {
         "api_key": api_key,
         "per_page": min(limit, 100),
-        "sort": "-receipt_date",
+        "sort": sort,
+        "most_recent": most_recent,
     }
 
     if form_type:
         params["form_type"] = form_type
+    if cycle:
+        params["cycle"] = cycle
+    if report_type:
+        params["report_type"] = report_type
 
     response = requests.get(
         f"{FEC_API_BASE}/committee/{committee_id}/filings/",
@@ -232,6 +250,30 @@ macOS quick setup:
         metavar="TYPE",
         help="Filter by form type (e.g., F3P, F3X, F3)",
     )
+    filings_parser.add_argument(
+        "--cycle",
+        type=int,
+        metavar="YEAR",
+        help="Filter by two-year election cycle (e.g., 2024)",
+    )
+    filings_parser.add_argument(
+        "--report-type",
+        type=str,
+        metavar="TYPE",
+        help="Filter by report type (e.g., Q1, Q2, MY, YE, 12G, 30G)",
+    )
+    filings_parser.add_argument(
+        "--sort",
+        type=str,
+        default="-file_number",
+        metavar="FIELD",
+        help="Sort field, use '-' prefix for descending (default: -file_number)",
+    )
+    filings_parser.add_argument(
+        "--include-amended",
+        action="store_true",
+        help="Include superseded amendments (default: only most recent versions)",
+    )
 
     args = parser.parse_args()
 
@@ -255,8 +297,12 @@ macOS quick setup:
             results = get_filings(
                 args.committee_id,
                 api_key,
-                args.limit,
-                args.form_type,
+                limit=args.limit,
+                form_type=args.form_type,
+                most_recent=not args.include_amended,
+                cycle=args.cycle,
+                report_type=args.report_type,
+                sort=args.sort,
             )
 
             if not results:
