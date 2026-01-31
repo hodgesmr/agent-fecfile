@@ -316,10 +316,38 @@ uv run scripts/fec_api.py search-committees "QUERY" [--limit N]
 
 **Get filings for a committee:**
 ```bash
-uv run scripts/fec_api.py get-filings COMMITTEE_ID [--limit N] [--form-type TYPE]
+uv run scripts/fec_api.py get-filings COMMITTEE_ID [--limit N] [--form-type TYPE] [--cycle YEAR] [--report-type TYPE] [--sort FIELD] [--include-amended]
 ```
 
-Form types: `F3` (House/Senate), `F3P` (Presidential), `F3X` (PACs/Parties)
+| Option | Description |
+|--------|-------------|
+| `--limit N` | Maximum results (default: 10) |
+| `--form-type TYPE` | Filter by form: `F3` (House/Senate), `F3P` (Presidential), `F3X` (PACs/Parties) |
+| `--cycle YEAR` | Filter by two-year election cycle (e.g., 2024, 2026) |
+| `--report-type TYPE` | Filter by report period: `Q1`, `Q2`, `Q3`, `YE`, `MY`, `12G`, `30G`, etc. |
+| `--sort FIELD` | Sort field with `-` prefix for descending (default: `-file_number`) |
+| `--include-amended` | Include superseded amendments (default: only current versions) |
+
+**Sorting options:**
+
+By default, results are sorted by `-file_number` (most recently filed first). File numbers increment strictly, so this gives deterministic ordering with no ties. Use `-` prefix for descending order.
+
+| Category | Fields |
+|----------|--------|
+| Date/time | `receipt_date`, `coverage_start_date`, `coverage_end_date`, `update_date` |
+| Identifiers | `file_number` |
+| Financial | `total_receipts`, `total_disbursements`, `total_individual_contributions`, `cash_on_hand_end_period`, `debts_owed_by_committee`, `debts_owed_to_committee` |
+| Other | `report_year`, `cycle`, `election_year`, `committee_name`, `candidate_name`, `pages` |
+
+**When to use different sort options:**
+
+| Sort | Use when... |
+|------|-------------|
+| `-file_number` | You want the most recently filed documents (default) |
+| `-receipt_date` | You want filings by the date the FEC received them (may have ties) |
+| `-coverage_end_date` | You want filings by reporting period (e.g., "most recent quarter") |
+
+Note: `-receipt_date` can have ties when multiple filings arrive the same day. `-coverage_end_date` is useful for finding the latest reporting period but doesn't account for amendments filed later.
 
 ## Finding Filing IDs (Manual)
 
