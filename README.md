@@ -55,14 +55,20 @@ cd ~/agent-fecfile && git fetch && git checkout 1.0.0
 
 ## Usage
 
-Once installed, ask your agent to analyze FEC filings:
+Once installed, ask your agent to analyze FEC filings.
 
 > [!WARNING]
 > FEC filings should be considered [untrusted content](https://simonwillison.net/2025/Jun/16/the-lethal-trifecta/). A malicious campaign sneaking prompt injections into the memo text field of their F99 is probably unlikely, but not impossible.
 
-- "Tell me about the committee for FEC 1896830"
+### With A Filing ID
 
+If you already have an FEC filing ID, you can work with it directly, without needing an API key:
+
+```text
+❯ Tell me about the committee for FEC 1896830
 ```
+
+```text
 ⏺ Utah Republican Party
 
   FEC Filing 1896830 | Form F3XN (Monthly Report)
@@ -94,9 +100,11 @@ Once installed, ask your agent to analyze FEC filings:
   They carry roughly $7,300 in debt.
 ```
 
-- "What are the largest expenditures in filing 1896830?"
-
+```text
+❯ What are the largest expenditures in filing 1896830?
 ```
+
+```text
 ⏺ FEC Filing 1896830 - Largest Expenditures
 
   | #   | Recipient                  |    Amount | Date       | Purpose          |
@@ -115,9 +123,11 @@ Once installed, ask your agent to analyze FEC filings:
   in May 2025.
 ```
 
-- "Show me a table of the contribution counts and totals, by state, in fec filing 1896830"
-
+```text
+❯ Show me a table of the contribution counts and totals, by state, in fec filing 1896830
 ```
+
+```text
 ⏺ FEC Filing 1896830 - Contributions by State
 
   | State | Count |      Total | % of Total |
@@ -134,101 +144,78 @@ Once installed, ask your agent to analyze FEC filings:
   6 states total, with only 7 out-of-state contributions.
 ```
 
-## Finding Filing IDs
+### Searching For Committees and Filings
 
-1. **FEC Website**: Visit [fec.gov](https://www.fec.gov) and search for a committee
-2. **Direct URLs**: Filing IDs appear in URLs like `https://docquery.fec.gov/dcdev/posted/1690664.fec`
-3. **FEC API**: Use `fec_api.py` to search for committees (requires API key setup below)
+You can use the agent skill to search for comittees and filings for you. This reaquires an API key stored in a secrets manager.
 
-## FEC API Setup (Optional)
+#### FEC API Setup
 
-The skill includes `fec_api.py` for searching committees via the authenticated FEC API. This is optional—the core filing analysis works without it.
+The skill includes `fec_api.py` for searching committees and filings via the authenticated FEC API. This is optional, the direct filing analysis works without it.
 
-### 1. Get an API Key
+##### 1. Get an API Key
 
 1. Visit https://api.open.fec.gov/developers/
 2. Click "Get an API Key" and fill out the form
 3. You'll receive your API key via email
 
-### 2. Store Your API Key
+##### 2. Store Your API Key
 
-API keys are stored in your system keyring. **Important:** Create the key manually (not via Python) so that the OS prompts for approval when scripts access it.
+By default, the skill looks for the API key in your system keyring. The script uses the Python [keyring](https://pypi.org/project/keyring/) library, which supports macOS [Keychain](https://en.wikipedia.org/wiki/Keychain_(software)), Freedesktop [Secret Service](http://standards.freedesktop.org/secret-service/) which supports many DE including GNOME (requires [secretstorage](https://pypi.python.org/pypi/secretstorage)), KDE4 & KDE5 [KWallet](https://en.wikipedia.org/wiki/KWallet) (requires [dbus](https://pypi.python.org/pypi/dbus-python)), and [Windows Credential Locker](https://docs.microsoft.com/en-us/windows/uwp/security/credential-locker).
 
-#### macOS
+On macOS:
 
-**Option A: Using Keychain Access (GUI)**
-1. Open Keychain Access (Applications → Utilities → Keychain Access)
-2. Click File → New Password Item (or press ⌘N)
-3. Fill in:
-   - Keychain Item Name: `fec-api`
-   - Account Name: `api-key`
-   - Password: *your API key*
-4. Click Add
-
-**Option B: Using Terminal**
 ```bash
-security add-generic-password -s "fec-api" -a "api-key" -w "YOUR_API_KEY_HERE"
+security add-generic-password -s "fec-api" -a "api-key" -w
 ```
 
-The first time the script accesses the key, macOS will prompt you to allow access.
+When the script accesses the key, macOS will prompt you to allow access.
 
-#### Windows
-
-1. Open Credential Manager (search "Credential Manager" in Start)
-2. Click "Windows Credentials"
-3. Click "Add a generic credential"
-4. Fill in:
-   - Internet or network address: `fec-api`
-   - User name: `api-key`
-   - Password: *your API key*
-
-#### Linux
-
-Use your distribution's secret manager (GNOME Keyring, KWallet) or `--credential-cmd` with your preferred secret store.
-
-#### Verify your key is stored
+If the OS keyring doesn't contain your key, the script supports injecting the key via `--credential-cmd`. The agent can use a secret manager like 1Password and have the agent inject your API key:
 
 ```bash
-# macOS
-security find-generic-password -s "fec-api" -a "api-key" -w
-```
-
-### Alternative Secret Stores
-
-If you use a secret manager like HashiCorp Vault, 1Password, or AWS Secrets Manager, you can use `--credential-cmd` to retrieve your API key:
-
-```bash
-# HashiCorp Vault
-uv run scripts/fec_api.py --credential-cmd "vault kv get -field=api_key secret/fec" search-committees "Biden"
-
 # 1Password CLI
-uv run scripts/fec_api.py --credential-cmd "op read 'op://Private/FEC API/credential'" search-committees "Biden"
-
-# AWS Secrets Manager
-uv run scripts/fec_api.py --credential-cmd "aws secretsmanager get-secret-value --secret-id fec-api --query SecretString --output text" search-committees "Biden"
-
-# pass (Unix password manager)
-uv run scripts/fec_api.py --credential-cmd "pass show fec/api-key" search-committees "Biden"
-
-# Bitwarden CLI
-uv run scripts/fec_api.py --credential-cmd "bw get password fec-api-key" search-committees "Biden"
+uv run scripts/fec_api.py --credential-cmd "op read 'op://Private/FEC API Key/credential'" search-committees "Utah Republican Party"
 ```
 
-### Linux Notes
+Once the key can be injected, queries become more powerful:
 
-On Linux systems without a graphical environment, the keyring library may not find a Secret Service provider. Options:
+```text
+❯ What are the top expenditures in Utah Republican Party's most recent filing?
+```
 
-1. **Install a Secret Service provider**: `gnome-keyring` or `kwallet`
-2. **Use the encrypted file backend**: `PYTHON_KEYRING_BACKEND=keyrings.alt.file.EncryptedKeyring` (prompts for master password)
-3. **Use `--credential-cmd`**: Point to your preferred secret store
+```text
+⏺ Top Expenditures in Utah Republican Party's Most Recent Filing
 
-### Troubleshooting
-
-| Error | Solution |
-|-------|----------|
-| "FEC API key not found in system keyring" | Re-add your key using the setup instructions above |
-| "Failed to initialize keyring backend" (Linux) | Install a Secret Service provider or use `--credential-cmd` |
-| API returns 403 Forbidden | Your API key may be invalid—request a new one |
+  Filing: 1934772 (November 2025 Monthly Report - Amended)
+  Coverage Period: November 1-30, 2025
+  Total Disbursements: $10,250.00
+  ┌──────┬─────────────────────────┬───────────┬────────────────────────┬────────────┐
+  │ Rank │          Payee          │  Amount   │        Purpose         │    Date    │
+  ├──────┼─────────────────────────┼───────────┼────────────────────────┼────────────┤
+  │ 1    │ Alta Club               │ $2,176.65 │ Fundraising Event Fees │ 2025-11-23 │
+  ├──────┼─────────────────────────┼───────────┼────────────────────────┼────────────┤
+  │ 2    │ ClickUp                 │ $2,030.18 │ Office Subscription    │ 2025-11-14 │
+  ├──────┼─────────────────────────┼───────────┼────────────────────────┼────────────┤
+  │ 3    │ Right Insight LLC       │ $1,525.00 │ Digital Consulting     │ 2025-11-05 │
+  ├──────┼─────────────────────────┼───────────┼────────────────────────┼────────────┤
+  │ 4    │ Buckeye Premium Finance │ $1,071.48 │ Rent                   │ 2025-11-26 │
+  ├──────┼─────────────────────────┼───────────┼────────────────────────┼────────────┤
+  │ 5    │ Marvellous Catering Co  │ $712.78   │ Food and Beverage      │ 2025-11-25 │
+  ├──────┼─────────────────────────┼───────────┼────────────────────────┼────────────┤
+  │ 6    │ Google                  │ $480.35   │ Office Subscriptions   │ 2025-11-24 │
+  ├──────┼─────────────────────────┼───────────┼────────────────────────┼────────────┤
+  │ 7    │ Thomas S. Monson Center │ $472.65   │ Donation               │ 2025-11-23 │
+  ├──────┼─────────────────────────┼───────────┼────────────────────────┼────────────┤
+  │ 8    │ Google                  │ $267.57   │ Office Subscriptions   │ 2025-11-24 │
+  ├──────┼─────────────────────────┼───────────┼────────────────────────┼────────────┤
+  │ 9    │ Marvellous Catering Co  │ $238.00   │ Food and Beverage      │ 2025-11-12 │
+  ├──────┼─────────────────────────┼───────────┼────────────────────────┼────────────┤
+  │ 10   │ Intuit                  │ $220.16   │ Office Subscriptions   │ 2025-11-24 │
+  └──────┴─────────────────────────┴───────────┴────────────────────────┴────────────┘
+  The largest expenditure was for a fundraising event at the Alta Club in Salt Lake City.
+  The committee spent heavily on software subscriptions (ClickUp, Google, Intuit) and
+  digital consulting services.
+```
 
 ## Skill Structure
 
@@ -240,18 +227,30 @@ skills/fecfile/
 │   └── SCHEDULES.md    # Schedule field mappings (A, B, C, D, E)
 └── scripts/
     ├── fetch_filing.py # Fetches FEC filing data (public API)
-    └── fec_api.py      # Committee search (authenticated API)
+    └── fec_api.py      # Committee and filing search (authenticated API)
 ```
 
 ## Manual Script Usage
 
-You can also run the fetch script directly:
+You can also run the FEC scripts directly:
+
+### Search For a Committee
+```bash
+uv run scripts/fec_api.py search-committees "Utah Republican Party"
+```
+
+### Get a Committee's Recent Filings
+```bash
+uv run scripts/fec_api.py get-filings C00089482 --limit 5
+```
+
+### Fetch a Filing
 
 ```bash
 uv run skills/fecfile/scripts/fetch_filing.py 1896830
 ```
 
-Dependencies are automatically installed by uv on first run.
+Dependencies are automatically installed by uv.
 
 ## Acknowledgments
 
