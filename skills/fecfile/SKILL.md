@@ -330,7 +330,11 @@ uv run scripts/fec_api.py get-filings COMMITTEE_ID [--limit N] [--form-type TYPE
 
 **Sorting options:**
 
-By default, results are sorted by `-receipt_date` (most recently received first). Use `-` prefix for descending order.
+By default, results are sorted by `-receipt_date` (most recently received first). Use `-` prefix for descending order. When specifying a descending sort, use `=` syntax:
+
+```bash
+uv run scripts/fec_api.py get-filings C00089482 --sort=-coverage_end_date
+```
 
 | Category | Fields |
 |----------|--------|
