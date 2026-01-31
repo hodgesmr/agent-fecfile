@@ -184,6 +184,16 @@ This processes hundreds of thousands of records using constant memory.
 4. **Streaming mode** - Use `--stream` with inline Python consumers for constant-memory processing
 5. **Limit output** - Use `.head()`, `.nlargest()`, `.nsmallest()` to cap results
 
+## API Key Security
+
+**IMPORTANT**: Never output or log the FEC API key. The key is retrieved securely from the system keyring, but can be accidentally exposed in:
+
+- Error messages from `requests` (which include the full URL)
+- Debug output or logging
+- Custom scripts that print request parameters
+
+When writing analysis scripts, never print URLs, request parameters, or raw exception messages that might contain the API key. The `fec_api.py` script sanitizes error output automatically, but custom scripts must handle this manually.
+
 ## Finding Filings by Candidate/Committee Name
 
 When the user asks about a candidate or committee's filings without providing a filing ID, use `fec_api.py` to discover the filing ID. This requires the user to have set up an API key (see README).

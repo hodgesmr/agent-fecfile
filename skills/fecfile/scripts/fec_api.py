@@ -24,11 +24,17 @@ Get an API key at: https://api.open.fec.gov/developers/
 
 import argparse
 import json
+import re
 import sys
 from typing import Optional
 
 import keyring
 import requests
+
+
+def sanitize_api_key(text: str) -> str:
+    """Remove API key from text to prevent accidental exposure in logs/errors."""
+    return re.sub(r"api_key=[^&\s]+", "api_key=REDACTED", text)
 
 FEC_API_BASE = "https://api.open.fec.gov/v1"
 KEYRING_SERVICE = "fec-api"
@@ -324,7 +330,7 @@ macOS quick setup:
             print(json.dumps(output, indent=2))
 
     except requests.RequestException as e:
-        print(f"API error: {e}", file=sys.stderr)
+        print(f"API error: {sanitize_api_key(str(e))}", file=sys.stderr)
         sys.exit(1)
 
 
