@@ -16,8 +16,8 @@ Setup: See README.md for instructions on storing your API key securely.
        Create the key manually (not via Python) so the OS prompts for approval.
 
 Usage:
-    uv run fec_api.py search-committees "Harris"
-    uv run fec_api.py get-filings C00703975 --limit 5
+    uv run fec_api.py search-committees "Utah Republican Party"
+    uv run fec_api.py get-filings C00089482 --limit 5
 
 Get an API key at: https://api.open.fec.gov/developers/
 """
@@ -70,14 +70,11 @@ def get_api_key_from_keyring(
         if api_key is None:
             raise CredentialError(
                 f"FEC API key not found in system keyring.\n"
-                f"Add it with:\n"
-                f"  python -c \"import keyring; keyring.set_password('{service}', '{username}', input('API Key: '))\"\n"
-                f"Or:\n"
-                f"  keyring set {service} {username}"
+                f"Attempted at Service: {service}, Username: {username}"
             )
 
         if not api_key:
-            raise CredentialError("Retrieved empty API key from keyring")
+            raise CredentialError("Retrieved empty FEC API key from keyring")
 
         return api_key
 
@@ -85,9 +82,7 @@ def get_api_key_from_keyring(
         raise CredentialError(f"Keyring access failed: {e}")
     except keyring.errors.InitError as e:
         raise CredentialError(
-            f"Failed to initialize keyring backend: {e}\n"
-            "On Linux, ensure a Secret Service provider is running "
-            "(e.g., gnome-keyring-daemon or kwallet)."
+            f"Failed to initialize keyring backend: {e}"
         )
 
 
@@ -150,7 +145,7 @@ def get_filings(
     Get filings for a committee.
 
     Args:
-        committee_id: FEC committee ID (e.g., "C00703975")
+        committee_id: FEC committee ID (e.g., "C00089482")
         api_key: FEC API key
         limit: Maximum number of results (default: 10)
         form_type: Filter by form type (e.g., "F3P", "F3X", "F3")
@@ -191,7 +186,7 @@ Setup:
   Get an API key at: https://api.open.fec.gov/developers/
 
 macOS quick setup:
-  security add-generic-password -s "fec-api" -a "api-key" -w "YOUR_KEY"
+  security add-generic-password -s "fec-api" -a "api-key" -w"
 """,
     )
 
@@ -222,7 +217,7 @@ macOS quick setup:
     filings_parser.add_argument(
         "committee_id",
         type=str,
-        help="FEC committee ID (e.g., C00703975)",
+        help="FEC committee ID (e.g., C00089482)",
     )
     filings_parser.add_argument(
         "--limit",
