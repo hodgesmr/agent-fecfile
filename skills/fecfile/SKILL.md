@@ -321,15 +321,6 @@ uv run scripts/fec_api.py get-filings COMMITTEE_ID [--limit N] [--form-type TYPE
 
 Form types: `F3` (House/Senate), `F3P` (Presidential), `F3X` (PACs/Parties)
 
-### Custom Credential Commands
-
-If the user has configured an alternative secret store, the key can be retrieved alternatively with: `--credential-cmd`. They may need to help you understand what's installed and how things are stored.
-
-```bash
-# Example: 1Password CLI
-uv run scripts/fec_api.py --credential-cmd "op read 'op://Private/FEC API Key/password'" search-committees "Utah Republican Party"
-```
-
 ## Finding Filing IDs (Manual)
 
 If the FEC API is not set up, filing IDs can be found via:

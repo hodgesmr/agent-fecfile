@@ -24,9 +24,7 @@ Get an API key at: https://api.open.fec.gov/developers/
 
 import argparse
 import json
-import subprocess
 import sys
-from typing import Optional
 
 import keyring
 import requests
@@ -93,16 +91,9 @@ def get_api_key_from_keyring(
         )
 
 
-def get_api_key(credential_cmd: Optional[str] = None) -> str:
+def get_api_key() -> str:
     """
-    Get the FEC API key using the credential helper pattern.
-
-    Resolution order:
-    1. Custom credential command (if provided)
-    2. System keyring (default)
-
-    Args:
-        credential_cmd: Optional shell command that outputs the API key
+    Get the FEC API key from the system keyring.
 
     Returns:
         The API key string
@@ -110,26 +101,6 @@ def get_api_key(credential_cmd: Optional[str] = None) -> str:
     Raises:
         CredentialError: If credentials cannot be retrieved
     """
-    if credential_cmd:
-        try:
-            result = subprocess.run(
-                credential_cmd,
-                shell=True,
-                capture_output=True,
-                text=True,
-                timeout=30,
-            )
-            if result.returncode != 0:
-                raise CredentialError(
-                    f"Credential command failed: {result.stderr.strip()}"
-                )
-            api_key = result.stdout.strip()
-            if not api_key:
-                raise CredentialError("Credential command returned empty output")
-            return api_key
-        except subprocess.TimeoutExpired:
-            raise CredentialError("Credential command timed out")
-
     return get_api_key_from_keyring()
 
 
@@ -224,13 +195,6 @@ macOS quick setup:
 """,
     )
 
-    parser.add_argument(
-        "--credential-cmd",
-        type=str,
-        metavar="CMD",
-        help="Shell command to retrieve API key (default: system keyring)",
-    )
-
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     # search-committees subcommand
@@ -276,7 +240,7 @@ macOS quick setup:
     args = parser.parse_args()
 
     try:
-        api_key = get_api_key(args.credential_cmd)
+        api_key = get_api_key()
     except CredentialError as e:
         print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)
