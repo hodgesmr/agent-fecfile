@@ -325,27 +325,26 @@ uv run scripts/fec_api.py get-filings COMMITTEE_ID [--limit N] [--form-type TYPE
 | `--form-type TYPE` | Filter by form: `F3` (House/Senate), `F3P` (Presidential), `F3X` (PACs/Parties) |
 | `--cycle YEAR` | Filter by two-year election cycle (e.g., 2024, 2026) |
 | `--report-type TYPE` | Filter by report period: `Q1`, `Q2`, `Q3`, `YE`, `MY`, `12G`, `30G`, etc. |
-| `--sort FIELD` | Sort field with `-` prefix for descending (default: `-file_number`) |
+| `--sort FIELD` | Sort field with `-` prefix for descending (default: `-receipt_date`) |
 | `--include-amended` | Include superseded amendments (default: only current versions) |
 
 **Sorting options:**
 
-By default, results are sorted by `-file_number` (most recently filed first). File numbers increment strictly, so this gives deterministic ordering with no ties. Use `-` prefix for descending order.
+By default, results are sorted by `-receipt_date` (most recently received first). Use `-` prefix for descending order.
 
 | Category | Fields |
 |----------|--------|
-| Date/time | `receipt_date`, `coverage_start_date`, `coverage_end_date`, `update_date` |
-| Identifiers | `file_number` |
-| Financial | `total_receipts`, `total_disbursements`, `total_individual_contributions`, `cash_on_hand_end_period`, `debts_owed_by_committee`, `debts_owed_to_committee` |
-| Other | `report_year`, `cycle`, `election_year`, `committee_name`, `candidate_name`, `pages` |
+| Date/time | `receipt_date`, `coverage_start_date`, `coverage_end_date` |
+| Financial | `total_receipts`, `total_disbursements` |
+| Other | `report_year`, `cycle` |
 
 **When to use different sort options:**
 
 | Sort | Use when... |
 |------|-------------|
-| `-file_number` | You want the most recently filed documents (default) |
-| `-receipt_date` | You want filings by the date the FEC received them (may have ties) |
+| `-receipt_date` | You want the most recently filed documents (default) |
 | `-coverage_end_date` | You want filings by reporting period (e.g., "most recent quarter") |
+| `-total_receipts` | You want filings with the highest fundraising totals first |
 
 Note: `-receipt_date` can have ties when multiple filings arrive the same day. `-coverage_end_date` is useful for finding the latest reporting period but doesn't account for amendments filed later.
 

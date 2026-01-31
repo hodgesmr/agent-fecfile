@@ -144,7 +144,7 @@ def get_filings(
     most_recent: bool = True,
     cycle: Optional[int] = None,
     report_type: Optional[str] = None,
-    sort: str = "-file_number",
+    sort: str = "-receipt_date",
 ) -> list[dict]:
     """
     Get filings for a committee.
@@ -157,12 +157,9 @@ def get_filings(
         most_recent: Only return current versions, not superseded amendments (default: True)
         cycle: Filter by two-year election cycle (e.g., 2024)
         report_type: Filter by report type (e.g., "Q1", "Q2", "MY", "YE", "12G", "30G")
-        sort: Sort field with optional "-" prefix for descending (default: "-file_number").
-              Date/time: receipt_date, coverage_start_date, coverage_end_date, update_date
-              Identifiers: file_number
-              Financial: total_receipts, total_disbursements, total_individual_contributions,
-                  cash_on_hand_end_period, debts_owed_by_committee, debts_owed_to_committee
-              Other: report_year, cycle, election_year, committee_name, candidate_name, pages
+        sort: Sort field with optional "-" prefix for descending (default: "-receipt_date").
+              Valid fields: receipt_date, coverage_start_date, coverage_end_date,
+                  total_receipts, total_disbursements, report_year, cycle
 
     Returns:
         List of filing records
@@ -265,9 +262,9 @@ macOS quick setup:
     filings_parser.add_argument(
         "--sort",
         type=str,
-        default="-file_number",
+        default="-receipt_date",
         metavar="FIELD",
-        help="Sort field, use '-' prefix for descending (default: -file_number)",
+        help="Sort field, use '-' prefix for descending (default: -receipt_date)",
     )
     filings_parser.add_argument(
         "--include-amended",
