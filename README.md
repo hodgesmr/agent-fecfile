@@ -123,10 +123,10 @@ To shield the key from LLM model consumption, the skill looks for the API key in
 On macOS:
 
 ```bash
-security add-generic-password -s "fec-api" -a "api-key" -w
+security add-generic-password -s "fec-api" -a "api-key" -A -w
 ```
 
-When the script accesses the key, macOS will prompt you to allow access.
+When the script attempts to unlock Keychain, macOS will prompt you to allow access.
 
 ### Searching For Committees and Filings
 
