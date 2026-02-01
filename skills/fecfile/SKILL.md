@@ -184,12 +184,189 @@ This processes hundreds of thousands of records using constant memory.
 4. **Streaming mode** - Use `--stream` with inline Python consumers for constant-memory processing
 5. **Limit output** - Use `.head()`, `.nlargest()`, `.nsmallest()` to cap results
 
-## Finding Filing IDs
+## API Key Security
 
-Filing IDs can be found via:
+**IMPORTANT**: Never output or log the FEC API key. The key is retrieved securely from the system keyring, but can be accidentally exposed in:
+
+- Error messages from `requests` (which include the full URL)
+- Debug output or logging
+- Custom scripts that print request parameters
+
+When writing analysis scripts, never print URLs, request parameters, or raw exception messages that might contain the API key. The `fec_api.py` script sanitizes error output automatically, but custom scripts must handle this manually.
+
+## Finding Filings by Candidate/Committee Name
+
+When the user asks about a candidate or committee's filings without providing a filing ID, use `fec_api.py` to discover the filing ID. This requires the user to have set up an API key (see README).
+
+### Workflow
+
+1. **Search for the committee** → get committee ID
+2. **Get filings for that committee** → get filing ID(s)
+3. **Fetch and analyze the filing** → use `fetch_filing.py`
+
+### Example: "What are the top expenditures in Utah Republican Party's most recent filing?"
+
+**Step 1: Find the committee**
+```bash
+uv run scripts/fec_api.py search-committees "Utah Republican Party"
+```
+```json
+[
+  {
+    "id": "C00089482",
+    "is_active": true,
+    "name": "UTAH REPUBLICAN PARTY"
+  },
+  {
+    "id": "C00174144",
+    "is_active": false,
+    "name": "UTAH COUNTY REPUBLICAN PARTY/FEC ACCT"
+  }
+]
+```
+
+Choose the appropriate `id` based on the user's query. Users may not know the exact name of the committee they're searching for. You may need to run multiple searches with alternate committee name queries to find the user's desired committee. You may (but not necessarily) need to present potential results to the user to have them confirm which one they're looking for.
+
+**Step 2: Get recent filings**
+```bash
+uv run scripts/fec_api.py get-filings C00089482 --limit 5
+```
+```json
+[
+    {
+    "filing_id": 1896830,
+    "form_type": "F3X",
+    "receipt_date": "2025-06-20T00:00:00",
+    "coverage_start_date": "2025-05-01",
+    "coverage_end_date": "2025-05-31",
+    "total_receipts": 42655.8,
+    "total_disbursements": 21283.49,
+    "amendment_indicator": "N"
+  },
+  {
+    "filing_id": null,
+    "form_type": "FRQ",
+    "receipt_date": "2025-05-21T00:00:00",
+    "coverage_start_date": "2025-03-01",
+    "coverage_end_date": "2025-03-31",
+    "total_receipts": null,
+    "total_disbursements": null,
+    "amendment_indicator": null
+  },
+  {
+    "filing_id": 1893645,
+    "form_type": "F3X",
+    "receipt_date": "2025-05-20T00:00:00",
+    "coverage_start_date": "2025-04-01",
+    "coverage_end_date": "2025-04-30",
+    "total_receipts": 25100.23,
+    "total_disbursements": 15024.56,
+    "amendment_indicator": "N"
+  },
+  {
+    "filing_id": 1889675,
+    "form_type": "F3X",
+    "receipt_date": "2025-04-20T00:00:00",
+    "coverage_start_date": "2025-03-01",
+    "coverage_end_date": "2025-03-31",
+    "total_receipts": 33363.33,
+    "total_disbursements": 37921.03,
+    "amendment_indicator": "N"
+  }
+]
+```
+
+Choose the appropriate `filing_id` based on the user's query. You may need to broader your `--limit` depending on the initial results, or select more than one `filing_id` depending on the user's query.
+
+**Step 3: Check filing size**
+```bash
+uv run scripts/fetch_filing.py 1896830 --summary-only
+```
+
+**Step 4: Post-filter to get top 10 expenditures**
+```bash
+cat > /tmp/top_expenditures.py << 'EOF'
+# /// script
+# requires-python = ">=3.9"
+# dependencies = ["pandas>=2.3.0"]
+# ///
+import json, sys
+import pandas as pd
+
+data = json.load(sys.stdin)
+df = pd.DataFrame(data.get('itemizations', {}).get('Schedule B', []))
+org  = df["payee_organization_name"].astype("string").str.strip().replace("", pd.NA)
+last = df["payee_last_name"].astype("string").str.strip().replace("", pd.NA)
+first= df["payee_first_name"].astype("string").str.strip().replace("", pd.NA)
+
+# "Last, First" when both exist; otherwise fall back to whichever exists
+person = (last + ", " + first).where(last.notna() & first.notna())
+person = person.combine_first(last).combine_first(first)
+
+payee_name = org.combine_first(person)
+
+top10 = (
+    df.assign(payee_name=payee_name)
+      .nlargest(10, "expenditure_amount")[
+          ["payee_name", "expenditure_amount", "expenditure_purpose_descrip", "expenditure_date"]
+      ]
+)
+print(top10.to_string())
+EOF
+
+uv run scripts/fetch_filing.py 1896830 --schedule B 2>&1 | uv run /tmp/top_expenditures.py
+```
+
+### Command Reference
+
+**Search for committees by name:**
+```bash
+uv run scripts/fec_api.py search-committees "QUERY" [--limit N]
+```
+
+**Get filings for a committee:**
+```bash
+uv run scripts/fec_api.py get-filings COMMITTEE_ID [--limit N] [--form-type TYPE] [--cycle YEAR] [--report-type TYPE] [--sort FIELD] [--include-amended]
+```
+
+| Option | Description |
+|--------|-------------|
+| `--limit N` | Maximum results (default: 10) |
+| `--form-type TYPE` | Filter by form: `F3` (House/Senate), `F3P` (Presidential), `F3X` (PACs/Parties) |
+| `--cycle YEAR` | Filter by two-year election cycle (e.g., 2024, 2026) |
+| `--report-type TYPE` | Filter by report period: `Q1`, `Q2`, `Q3`, `YE`, `MY`, `12G`, `30G`, etc. |
+| `--sort FIELD` | Sort field with `-` prefix for descending (default: `-receipt_date`) |
+| `--include-amended` | Include superseded amendments (default: only current versions) |
+
+**Sorting options:**
+
+By default, results are sorted by `-receipt_date` (most recently received first). Use `-` prefix for descending order. When specifying a descending sort, use `=` syntax:
+
+```bash
+uv run scripts/fec_api.py get-filings C00089482 --sort=-coverage_end_date
+```
+
+| Category | Fields |
+|----------|--------|
+| Date/time | `receipt_date`, `coverage_start_date`, `coverage_end_date` |
+| Financial | `total_receipts`, `total_disbursements` |
+| Other | `report_year`, `cycle` |
+
+**When to use different sort options:**
+
+| Sort | Use when... |
+|------|-------------|
+| `-receipt_date` | You want the most recently filed documents (default) |
+| `-coverage_end_date` | You want filings by reporting period (e.g., "most recent quarter") |
+| `-total_receipts` | You want filings with the highest fundraising totals first |
+
+Note: `-receipt_date` can have ties when multiple filings arrive the same day. `-coverage_end_date` is useful for finding the latest reporting period but doesn't account for amendments filed later.
+
+## Finding Filing IDs (Manual)
+
+If the FEC API is not set up, filing IDs can be found via:
 1. **FEC Website**: Visit [fec.gov](https://www.fec.gov) and search for a committee
 2. **Direct URLs**: Filing IDs appear in URLs like `https://docquery.fec.gov/dcdev/posted/1690664.fec`
-3. **FEC API**: Use the [FEC API](https://api.open.fec.gov/developers/) to search for filings
 
 ## Response Style
 
