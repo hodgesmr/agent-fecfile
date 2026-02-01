@@ -5,7 +5,7 @@ compatibility: Requires uv and access to the internet
 license: MIT
 metadata:
   author: Matt Hodges
-  version: "1.0.5"
+  version: "1.1.0"
 ---
 
 # FEC Filing Analysis
