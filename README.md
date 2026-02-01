@@ -160,7 +160,10 @@ The skill includes `fec_api.py` for searching committees and filings via the aut
 
 ##### 2. Store Your API Key
 
-By default, the skill looks for the API key in your system keyring. The script uses the Python [keyring](https://pypi.org/project/keyring/) library, which supports macOS [Keychain](https://en.wikipedia.org/wiki/Keychain_(software)), Freedesktop [Secret Service](http://standards.freedesktop.org/secret-service/) which supports many DE including GNOME (requires [secretstorage](https://pypi.python.org/pypi/secretstorage)), KDE4 & KDE5 [KWallet](https://en.wikipedia.org/wiki/KWallet) (requires [dbus](https://pypi.python.org/pypi/dbus-python)), and [Windows Credential Locker](https://docs.microsoft.com/en-us/windows/uwp/security/credential-locker).
+In order to shielf the key from LLM model consumption, the skill looks for the API key in your system keyring. The script uses the Python [keyring](https://pypi.org/project/keyring/) library to access the key, which it then holds in memory.
+
+> [!WARNING]
+> Even though the API key is securely stored in the system keyring, the agent may still attempt to access it by writing bespoke scripts. Always monitor the agent's attempted actions before unlocking access to the secret store
 
 On macOS:
 
