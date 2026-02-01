@@ -2,14 +2,14 @@
 
 An [Agent Skill](https://agentskills.io) for analyzing Federal Election Commission (FEC) campaign finance filings.
 
-This skill enables AI agents to fetch, parse, and analyze FEC filings directly within agent sessions. Parsing and filtering happen outside the model context, allowing agents to programmatically reduce large filings before analysis, saving tokens and enabling efficient queries against filings of any size. The skill includes detailed field mappings for common form types and schedules, helping agents accurately interpret campaign finance data like contributions, disbursements, and committee information. You can read more about how this skill was built [here](https://matthodges.com/posts/2025-12-19-ai-agent-fec/).
+This skill enables AI agents to fetch, parse, and analyze FEC filings directly within agent sessions. Parsing and filtering happen outside the model context, allowing agents to programmatically reduce large filings before analysis, saving tokens and enabling efficient queries against filings of any size.
 
-> [!NOTE]
-> This Skill requires network access to fetch data from the FEC (`docquery.fec.gov`). It will not work in environments where external network access is restricted.
+The skill includes detailed field mappings for common form types and schedules, helping agents accurately interpret campaign finance data like contributions, disbursements, and committee information.
 
 ## Features
 
 - Fetch and analyze FEC filings by filing ID
+- Search for committees and filings via the FEC API
 - Support for major form types (F1, F2, F3, F99)
 - Detailed field mappings for contributions, disbursements, and schedules
 - Auto-installing dependencies via uv
@@ -18,10 +18,8 @@ This skill enables AI agents to fetch, parse, and analyze FEC filings directly w
 
 - An agent runtime that supports Agent Skills (e.g., [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) or [Codex CLI](https://developers.openai.com/codex/cli/))
 - [uv](https://docs.astral.sh/uv/) (This skill uses `uv` to manage its own dependencies in isolation)
+- An [FEC API key](https://api.open.fec.gov/developers/) (optional, for committee/filing search)
 - Python 3.9+
-
-> [!TIP]
-> For best results, use the most capable models available in your agent runtime (e.g., Claude Opus 4.5 or comparable frontier models). More capable models produce better analysis and more accurate field interpretations.
 
 ## Installation (Global)
 
@@ -57,48 +55,12 @@ cd ~/agent-fecfile && git fetch && git checkout 1.0.0
 
 Once installed, ask your agent to analyze FEC filings.
 
-> [!WARNING]
-> FEC filings should be considered [untrusted content](https://simonwillison.net/2025/Jun/16/the-lethal-trifecta/). A malicious campaign sneaking prompt injections into the memo text field of their F99 is probably unlikely, but not impossible.
+> [!TIP]
+> For best results, use the most capable models available in your agent runtime (e.g., Claude Opus 4.5 or comparable frontier models). More capable models produce better analysis and more accurate field interpretations.
 
-### With A Filing ID
+### Basic Usage (With A Filing ID)
 
 If you already have an FEC filing ID, you can work with it directly, without needing an API key:
-
-```text
-❯ Tell me about the committee for FEC 1896830
-```
-
-```text
-⏺ Utah Republican Party
-
-  FEC Filing 1896830 | Form F3XN (Monthly Report)
-
-  Committee Details
-
-  | Field           | Value                          |
-  |-----------------|--------------------------------|
-  | Committee Name  | Utah Republican Party          |
-  | Address         | 420 East South Temple, Ste 390 |
-  | City, State ZIP | Salt Lake City, UT 84111       |
-  | Coverage Period | May 1-31, 2025                 |
-
-  Financial Summary
-
-  | Metric                  |     Amount |
-  |-------------------------|------------|
-  | Total Receipts          | $42,655.80 |
-  | Total Disbursements     | $21,283.49 |
-  | Cash on Hand (Start)    | $45,301.29 |
-  | Cash on Hand (End)      | $66,673.60 |
-  | Debts Owed By Committee |  $7,333.34 |
-
-  Summary
-
-  This is a monthly report (F3XN) for the Utah Republican Party state party committee,
-  covering May 2025. The committee had a net positive month, raising ~$43K and
-  spending ~$21K, ending with about $67K cash on hand.
-  They carry roughly $7,300 in debt.
-```
 
 ```text
 ❯ What are the largest expenditures in filing 1896830?
@@ -144,26 +106,19 @@ If you already have an FEC filing ID, you can work with it directly, without nee
   6 states total, with only 7 out-of-state contributions.
 ```
 
-### Searching For Committees and Filings
+### FEC API Setup (Optional)
 
-You can use the agent skill to search for comittees and filings for you. This reaquires an API key stored in a secrets manager.
+The skill includes `fec_api.py` for searching committees and filings via the authenticated FEC API.
 
-#### FEC API Setup
-
-The skill includes `fec_api.py` for searching committees and filings via the authenticated FEC API. This is optional, the direct filing analysis works without it.
-
-##### 1. Get an API Key
+#### 1. Get an API Key
 
 1. Visit https://api.open.fec.gov/developers/
-2. Click "Get an API Key" and fill out the form
+2. Go to "Sign up for an API key" and fill out the form
 3. You'll receive your API key via email
 
-##### 2. Store Your API Key
+#### 2. Store Your API Key
 
-In order to shielf the key from LLM model consumption, the skill looks for the API key in your system keyring. The script uses the Python [keyring](https://pypi.org/project/keyring/) library to access the key, which it then holds in memory.
-
-> [!WARNING]
-> Even though the API key is securely stored in the system keyring, the agent may still attempt to access it by writing bespoke scripts. Always monitor the agent's attempted actions before unlocking access to the secret store
+To shield the key from LLM model consumption, the skill looks for the API key in your system keyring. The script uses the Python [keyring](https://pypi.org/project/keyring/) library, which supports a variety of operating system keyrings.
 
 On macOS:
 
@@ -173,7 +128,9 @@ security add-generic-password -s "fec-api" -a "api-key" -w
 
 When the script accesses the key, macOS will prompt you to allow access.
 
-Once your API key is stored, queries become more powerful:
+### Searching For Committees and Filings
+
+Once your API key is stored, queries become more powerful. You can use the agent skill to search for committees and filings for you.
 
 ```text
 ❯ What are the top expenditures in Utah Republican Party's most recent filing?
@@ -213,6 +170,12 @@ Once your API key is stored, queries become more powerful:
   digital consulting services.
 ```
 
+## Security Notes
+
+- **Network access**: This skill requires network access to fetch data from the FEC (`docquery.fec.gov`). It will not work in environments where external network access is restricted.
+- **Untrusted content**: FEC filings should be considered [untrusted content](https://simonwillison.net/2025/Jun/16/the-lethal-trifecta/). A malicious campaign sneaking prompt injections into the memo text field of their F99 is probably unlikely, but not impossible.
+- **Keyring access**: Even though the API key is securely stored in the system keyring, the agent may still attempt to access it by writing bespoke scripts. Always monitor the agent's attempted actions before unlocking access to the secret store.
+
 ## Skill Structure
 
 ```
@@ -225,28 +188,6 @@ skills/fecfile/
     ├── fetch_filing.py # Fetches FEC filing data (public API)
     └── fec_api.py      # Committee and filing search (authenticated API)
 ```
-
-## Manual Script Usage
-
-You can also run the FEC scripts directly:
-
-### Search For a Committee
-```bash
-uv run scripts/fec_api.py search-committees "Utah Republican Party"
-```
-
-### Get a Committee's Recent Filings
-```bash
-uv run scripts/fec_api.py get-filings C00089482 --limit 5
-```
-
-### Fetch a Filing
-
-```bash
-uv run skills/fecfile/scripts/fetch_filing.py 1896830
-```
-
-Dependencies are automatically installed by uv.
 
 ## Acknowledgments
 
