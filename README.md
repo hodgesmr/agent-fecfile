@@ -1,4 +1,8 @@
-# FEC Filing Agent Skill
+# agent-fecfile
+
+![agent-fecfile](./agent-fecfile.jpeg)
+
+## FEC Filing Agent Skill
 
 An [Agent Skill](https://agentskills.io) for analyzing Federal Election Commission (FEC) campaign finance filings.
 
