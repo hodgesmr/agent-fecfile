@@ -13,9 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **MCP server** (`mcp-server/server.py`): Provides `search_committees` and `get_filings` tools
   - Loads FEC API key from system keyring **once at startup**
   - Key held in memory, never exposed to the model
+  - Works with any MCP-compatible runtime (Claude Code, Codex, etc.)
 - **Plugin manifest** (`.claude-plugin/plugin.json`): Defines plugin metadata and version
 - **MCP configuration** (`.mcp.json`): Configures the MCP server for Claude Code
-- **Standalone CLI** (`mcp-server/fec_api_cli.py`): For agent runtimes without MCP support (Codex, etc.)
 
 ### Changed
 

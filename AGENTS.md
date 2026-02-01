@@ -21,8 +21,7 @@ agent-fecfile/
 │   └── plugin.json              # Plugin manifest (version source of truth)
 ├── .mcp.json                    # MCP server configuration
 ├── mcp-server/
-│   ├── server.py                # MCP server (loads API key at startup)
-│   └── fec_api_cli.py           # Standalone CLI for non-MCP runtimes
+│   └── server.py                # MCP server (loads API key at startup)
 ├── skills/fecfile/
 │   ├── SKILL.md                 # Main skill entrypoint and usage guide
 │   ├── references/
@@ -43,13 +42,10 @@ agent-fecfile/
 - `uv run skills/fecfile/scripts/fetch_filing.py <FILING_ID> --schedule A`: Limit to a single schedule
 - `uv run skills/fecfile/scripts/fetch_filing.py <FILING_ID> --stream`: JSONL streaming
 
-**Authenticated API (standalone CLI):**
-- `uv run mcp-server/fec_api_cli.py search-committees "QUERY"`: Search for committees
-- `uv run mcp-server/fec_api_cli.py get-filings COMMITTEE_ID`: Get filings for a committee
-
-**MCP Server (for testing):**
+**MCP Server:**
 - The MCP server is automatically started by Claude Code when loaded as a plugin
-- It loads the FEC API key from keyring once at startup
+- For other runtimes, configure MCP to run: `uv run mcp-server/server.py`
+- The server loads the FEC API key from keyring once at startup
 
 ## Coding Style & Naming Conventions
 
@@ -118,19 +114,13 @@ The MCP server (`mcp-server/server.py`) provides secure API access:
 - Key held in memory, never exposed to the model
 - Exposes `search_committees` and `get_filings` as MCP tools
 - Uses stdio transport for communication with Claude Code
-
-### Standalone CLI
-
-The CLI (`mcp-server/fec_api_cli.py`) is for agent runtimes without MCP support:
-- Same functionality as MCP tools
-- Retrieves API key from keyring on each invocation
-- Output sanitized to prevent key exposure in errors
+- Works with any MCP-compatible runtime (Claude Code, Codex, etc.)
 
 ### Agent Skill
 
 The skill (`skills/fecfile/SKILL.md`) provides:
 - Instructions for analyzing FEC filings
-- Documentation of MCP tools and CLI commands
+- Documentation of MCP tools
 - Field reference for forms and schedules
 - Large filing handling strategies
 

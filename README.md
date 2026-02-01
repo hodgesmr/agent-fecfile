@@ -21,7 +21,7 @@ The plugin includes detailed field mappings for common form types and schedules,
 
 ## Requirements
 
-- [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) (for plugin installation)
+- [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) or another MCP-compatible runtime (e.g., [Codex CLI](https://openai.github.io/codex/mcp/))
 - [uv](https://docs.astral.sh/uv/) (for running Python scripts)
 - Python 3.9+
 - An [FEC API key](https://api.open.fec.gov/developers/) (optional, for committee/filing search)
@@ -47,25 +47,34 @@ When loaded as a plugin:
 
 To make the plugin permanent, add it to your Claude Code configuration.
 
-### Alternative: Standalone Skill Installation
+### Other MCP-Compatible Runtimes (Codex, etc.)
 
-For agent runtimes that don't support Claude Code plugins (like Codex CLI), you can install just the Agent Skill:
+For agent runtimes that support MCP but not Claude Code plugins, you can:
+
+1. **Install the Agent Skill** by symlinking to your runtime's skills directory:
 
 ```bash
 # Clone the repository
 git clone --branch latest git@github.com:hodgesmr/agent-fecfile.git ~/agent-fecfile
 
 # Symlink to your agent's skills directory
-# Claude Code CLI
-ln -sfn ~/agent-fecfile/skills/fecfile ~/.claude/skills/fecfile
-
-# Codex CLI
 ln -sfn ~/agent-fecfile/skills/fecfile ~/.codex/skills/fecfile
 ```
 
-In standalone mode:
-- Use `mcp-server/fec_api_cli.py` for committee/filing search
-- The API key is retrieved from keyring on each script invocation
+2. **Configure the MCP server** in your runtime's MCP configuration:
+
+```json
+{
+  "mcpServers": {
+    "fec-api": {
+      "command": "uv",
+      "args": ["run", "/path/to/agent-fecfile/mcp-server/server.py"]
+    }
+  }
+}
+```
+
+The MCP server loads the FEC API key from the system keyring once at startup, keeping it secure.
 
 ## Updating
 
@@ -135,7 +144,7 @@ If you already have an FEC filing ID, you can work with it directly, without nee
 
 ### FEC API Setup (Optional)
 
-The plugin includes an MCP server (or standalone CLI) for searching committees and filings via the authenticated FEC API.
+The MCP server provides committee and filing search via the authenticated FEC API.
 
 #### 1. Get an API Key
 
@@ -145,7 +154,7 @@ The plugin includes an MCP server (or standalone CLI) for searching committees a
 
 #### 2. Store Your API Key
 
-To shield the key from LLM model consumption, the API key must be stored in your system keyring. The MCP server and CLI scripts use the Python [keyring](https://pypi.org/project/keyring/) library, which supports a variety of operating system keyrings.
+To shield the key from LLM model consumption, the API key must be stored in your system keyring. The MCP server uses the Python [keyring](https://pypi.org/project/keyring/) library, which supports a variety of operating system keyrings.
 
 **macOS:**
 
@@ -173,24 +182,10 @@ For other supported systems, consult the [keyring documentation](https://keyring
 
 Once your API key is stored, queries become more powerful. You can search for committees and filings without knowing the filing ID in advance.
 
-**Plugin Mode (Claude Code):**
-
 The MCP server provides `search_committees` and `get_filings` tools. The API key is loaded once at server startup and kept in memory—it is never visible to the model.
 
 ```text
 ❯ What are the top expenditures in Utah Republican Party's most recent filing?
-```
-
-**Standalone Mode (Codex, etc.):**
-
-Use the CLI script directly:
-
-```bash
-# Search for a committee
-uv run ~/agent-fecfile/mcp-server/fec_api_cli.py search-committees "Utah Republican Party"
-
-# Get filings for a committee
-uv run ~/agent-fecfile/mcp-server/fec_api_cli.py get-filings C00089482 --limit 5
 ```
 
 ```text
@@ -210,16 +205,13 @@ uv run ~/agent-fecfile/mcp-server/fec_api_cli.py get-filings C00089482 --limit 5
 
 ## Architecture
 
-### Plugin Mode (Claude Code)
-
 ```
 agent-fecfile/
 ├── .claude-plugin/
 │   └── plugin.json          # Plugin manifest (version: 2.0.0)
-├── .mcp.json                # MCP server configuration
+├── .mcp.json                # MCP server configuration (for Claude Code)
 ├── mcp-server/
-│   ├── server.py            # MCP server (loads API key at startup)
-│   └── fec_api_cli.py       # Standalone CLI (for non-MCP usage)
+│   └── server.py            # MCP server (loads API key at startup)
 └── skills/
     └── fecfile/
         ├── SKILL.md         # Agent Skill instructions
@@ -228,40 +220,23 @@ agent-fecfile/
             └── fetch_filing.py  # Public FEC filing fetcher
 ```
 
-When used as a Claude Code plugin:
-- The MCP server loads the FEC API key from keyring **once at startup**
-- The key is held in memory and never exposed to the model
-- MCP tools (`search_committees`, `get_filings`) are available alongside the skill
-
-### Standalone Mode (Codex, etc.)
-
-When used as a standalone skill:
-- Use `mcp-server/fec_api_cli.py` for committee/filing search
-- The API key is retrieved from keyring **on each invocation**
-- The key passes through the Python process but is sanitized from error output
+The MCP server:
+- Loads the FEC API key from keyring **once at startup**
+- Holds the key in memory, never exposing it to the model
+- Provides `search_committees` and `get_filings` tools
 
 ## Security Notes
 
-- **API key security**: In plugin mode, the FEC API key is loaded once at MCP server startup and held in memory. The key is never included in tool outputs or error messages visible to the model. In standalone mode, the key is retrieved from keyring for each script invocation.
+- **API key security**: The FEC API key is loaded once at MCP server startup and held in memory. The key is never included in tool outputs or error messages visible to the model.
 
 - **Network access**: This plugin requires network access to fetch data from the FEC (`docquery.fec.gov`, `api.open.fec.gov`). It will not work in environments where external network access is restricted.
 
 - **Untrusted content**: FEC filings should be considered [untrusted content](https://simonwillison.net/2025/Jun/16/the-lethal-trifecta/). A malicious campaign sneaking prompt injections into the memo text field of their F99 is probably unlikely, but not impossible.
 
-- **Keyring access**: The MCP server accesses the keyring at startup. In standalone mode, scripts access keyring on each invocation. Monitor agent actions that request keyring access.
+- **Keyring access**: The MCP server accesses the keyring at startup. Monitor agent actions that request keyring access.
 
 > [!CAUTION]
 > The user experience of macOS Keychain is [not great](https://github.com/jaraco/keyring/issues/644) and will likely result in many repeated password prompts. This may tempt the user to "Always Allow" access to the key by Python. Doing so can expose the key to the LLM agent if it then tries to write Python to read the key itself. Other system keyrings may have a better user experience.
-
-## Plugin vs Standalone Comparison
-
-| Feature | Plugin Mode (Claude Code) | Standalone Mode (Codex, etc.) |
-|---------|---------------------------|-------------------------------|
-| Installation | `claude --plugin-dir` | Symlink to skills directory |
-| API key loading | Once at startup | Each script invocation |
-| API key visibility | Never exposed to model | Passes through Python, sanitized |
-| Committee/filing search | MCP tools (automatic) | CLI script (manual) |
-| Skill availability | Automatic | Automatic |
 
 ## Skill Structure
 

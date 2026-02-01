@@ -186,57 +186,35 @@ This processes hundreds of thousands of records using constant memory.
 
 ## Finding Filings by Candidate/Committee Name
 
-When the user asks about a candidate or committee's filings without providing a filing ID, you can discover the filing ID using MCP tools or the standalone script.
+When the user asks about a candidate or committee's filings without providing a filing ID, use the MCP tools to discover the filing ID.
 
-### Using MCP Tools (Claude Code Plugin)
+### MCP Tools
 
-When this skill is installed as a Claude Code plugin, the `fec-api` MCP server provides two tools:
+The `fec-api` MCP server provides two tools:
 
 - **`search_committees`**: Search for committees by name → returns committee IDs
 - **`get_filings`**: Get filings for a committee ID → returns filing IDs and metadata
 
 The MCP server loads the FEC API key from the system keyring once at startup, keeping it secure and hidden from the conversation. The API key is never visible to the model.
 
-**Example workflow:**
-
-1. Use `search_committees` tool with query "Utah Republican Party"
-2. Select the appropriate committee ID from results (e.g., C00089482)
-3. Use `get_filings` tool with the committee ID
-4. Use `fetch_filing.py` to analyze the specific filing
-
-### Using Standalone Script (Other Agent Runtimes)
-
-For agent runtimes that don't support MCP (like Codex CLI), use the `fec_api.py` script directly. This requires the FEC API key to be stored in the system keyring.
-
-**Search for committees:**
-```bash
-uv run mcp-server/fec_api_cli.py search-committees "QUERY" [--limit N]
-```
-
-**Get filings for a committee:**
-```bash
-uv run mcp-server/fec_api_cli.py get-filings COMMITTEE_ID [--limit N] [--form-type TYPE] [--cycle YEAR] [--report-type TYPE] [--sort FIELD] [--include-amended]
-```
-
 ### API Key Security
 
-**IMPORTANT**: Never output or log the FEC API key. When using the MCP server (plugin mode), the key is loaded once at server startup and kept in memory—it is never exposed to the model. When using the standalone CLI script, the key is retrieved from the system keyring for each invocation.
+**IMPORTANT**: Never output or log the FEC API key. The key is loaded once at server startup and kept in memory—it is never exposed to the model.
 
 The key can be accidentally exposed in:
 - Error messages from `requests` (which include the full URL)
 - Debug output or logging
 - Custom scripts that print request parameters
 
-Both the MCP server and CLI script sanitize error output to prevent key exposure.
+The MCP server sanitizes error output to prevent key exposure.
 
 ### Workflow Example
 
 **"What are the top expenditures in Utah Republican Party's most recent filing?"**
 
-**Step 1: Find the committee** (using MCP tool or CLI)
+**Step 1: Find the committee**
 
-MCP: Use `search_committees` tool with query "Utah Republican Party"
-CLI: `uv run mcp-server/fec_api_cli.py search-committees "Utah Republican Party"`
+Use `search_committees` tool with query "Utah Republican Party":
 
 ```json
 [
@@ -248,10 +226,11 @@ CLI: `uv run mcp-server/fec_api_cli.py search-committees "Utah Republican Party"
 ]
 ```
 
+Choose the appropriate `id` based on the user's query. Users may not know the exact name of the committee they're searching for. You may need to run multiple searches with alternate committee name queries to find the user's desired committee.
+
 **Step 2: Get recent filings**
 
-MCP: Use `get_filings` tool with committee_id "C00089482"
-CLI: `uv run mcp-server/fec_api_cli.py get-filings C00089482 --limit 5`
+Use `get_filings` tool with committee_id "C00089482":
 
 ```json
 [
@@ -267,6 +246,8 @@ CLI: `uv run mcp-server/fec_api_cli.py get-filings C00089482 --limit 5`
   }
 ]
 ```
+
+Choose the appropriate `filing_id` based on the user's query.
 
 **Step 3: Check filing size**
 ```bash
@@ -328,15 +309,7 @@ uv run scripts/fetch_filing.py 1896830 --schedule B 2>&1 | uv run /tmp/top_expen
 | `sort` | string | No | Sort field with '-' prefix for descending (default: -receipt_date) |
 | `include_amended` | boolean | No | Include superseded amendments (default: false) |
 
-### CLI Tool Reference (Standalone Mode)
-
 **Sorting options:**
-
-By default, results are sorted by `-receipt_date` (most recently received first). Use `-` prefix for descending order. When specifying a descending sort, use `=` syntax:
-
-```bash
-uv run mcp-server/fec_api_cli.py get-filings C00089482 --sort=-coverage_end_date
-```
 
 | Category | Fields |
 |----------|--------|
