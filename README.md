@@ -146,37 +146,34 @@ Once your API key is stored, queries become more powerful. You can use the agent
 ```
 
 ```text
-⏺ Top Expenditures in Utah Republican Party's Most Recent Filing
+⏺ Top Expenditures - Utah Republican Party (December 2025)
 
-  Filing: 1934772 (November 2025 Monthly Report - Amended)
-  Coverage Period: November 1-30, 2025
-  Total Disbursements: $10,250.00
-  ┌──────┬─────────────────────────┬───────────┬────────────────────────┬────────────┐
-  │ Rank │          Payee          │  Amount   │        Purpose         │    Date    │
-  ├──────┼─────────────────────────┼───────────┼────────────────────────┼────────────┤
-  │ 1    │ Alta Club               │ $2,176.65 │ Fundraising Event Fees │ 2025-11-23 │
-  ├──────┼─────────────────────────┼───────────┼────────────────────────┼────────────┤
-  │ 2    │ ClickUp                 │ $2,030.18 │ Office Subscription    │ 2025-11-14 │
-  ├──────┼─────────────────────────┼───────────┼────────────────────────┼────────────┤
-  │ 3    │ Right Insight LLC       │ $1,525.00 │ Digital Consulting     │ 2025-11-05 │
-  ├──────┼─────────────────────────┼───────────┼────────────────────────┼────────────┤
-  │ 4    │ Buckeye Premium Finance │ $1,071.48 │ Rent                   │ 2025-11-26 │
-  ├──────┼─────────────────────────┼───────────┼────────────────────────┼────────────┤
-  │ 5    │ Marvellous Catering Co  │ $712.78   │ Food and Beverage      │ 2025-11-25 │
-  ├──────┼─────────────────────────┼───────────┼────────────────────────┼────────────┤
-  │ 6    │ Google                  │ $480.35   │ Office Subscriptions   │ 2025-11-24 │
-  ├──────┼─────────────────────────┼───────────┼────────────────────────┼────────────┤
-  │ 7    │ Thomas S. Monson Center │ $472.65   │ Donation               │ 2025-11-23 │
-  ├──────┼─────────────────────────┼───────────┼────────────────────────┼────────────┤
-  │ 8    │ Google                  │ $267.57   │ Office Subscriptions   │ 2025-11-24 │
-  ├──────┼─────────────────────────┼───────────┼────────────────────────┼────────────┤
-  │ 9    │ Marvellous Catering Co  │ $238.00   │ Food and Beverage      │ 2025-11-12 │
-  ├──────┼─────────────────────────┼───────────┼────────────────────────┼────────────┤
-  │ 10   │ Intuit                  │ $220.16   │ Office Subscriptions   │ 2025-11-24 │
-  └──────┴─────────────────────────┴───────────┴────────────────────────┴────────────┘
-  The largest expenditure was for a fundraising event at the Alta Club in Salt Lake City.
-  The committee spent heavily on software subscriptions (ClickUp, Google, Intuit) and
-  digital consulting services.
+  Filing 1942957 | Coverage: Dec 1-31, 2025 | Total Disbursements: $20,500.65
+  ┌─────────────────────────┬───────────┬────────────────────────┬────────┐
+  │          Payee          │  Amount   │        Purpose         │  Date  │
+  ├─────────────────────────┼───────────┼────────────────────────┼────────┤
+  │ USPS                    │ $4,699.58 │ Direct Mail            │ Dec 23 │
+  ├─────────────────────────┼───────────┼────────────────────────┼────────┤
+  │ CPMI Solutions          │ $4,396.30 │ Direct Mailing         │ Dec 22 │
+  ├─────────────────────────┼───────────┼────────────────────────┼────────┤
+  │ NationBuilder           │ $2,925.00 │ Office Subscriptions   │ Dec 1  │
+  ├─────────────────────────┼───────────┼────────────────────────┼────────┤
+  │ NationBuilder           │ $2,646.00 │ Office Subscriptions   │ Dec 29 │
+  ├─────────────────────────┼───────────┼────────────────────────┼────────┤
+  │ Chartwells              │ $1,907.24 │ Event Registration Fee │ Dec 17 │
+  ├─────────────────────────┼───────────┼────────────────────────┼────────┤
+  │ Buckeye Premium Finance │ $1,071.48 │ Rent                   │ Dec 26 │
+  ├─────────────────────────┼───────────┼────────────────────────┼────────┤
+  │ Extra Space Storage     │ $487.00   │ Storage                │ Dec 2  │
+  ├─────────────────────────┼───────────┼────────────────────────┼────────┤
+  │ Extra Space Storage     │ $487.00   │ Storage                │ Dec 30 │
+  ├─────────────────────────┼───────────┼────────────────────────┼────────┤
+  │ Ring Central            │ $170.31   │ Telephone              │ Dec 11 │
+  ├─────────────────────────┼───────────┼────────────────────────┼────────┤
+  │ Intuit                  │ $123.57   │ Office Subscriptions   │ Dec 24 │
+  └─────────────────────────┴───────────┴────────────────────────┴────────┘
+  The bulk of December spending was on direct mail operations (~$9,100 combined
+  to USPS and CPMI Solutions) and NationBuilder software subscriptions (~$5,600).
 ```
 
 ## Security Notes
