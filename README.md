@@ -120,13 +120,22 @@ The skill includes `fec_api.py` for searching committees and filings via the aut
 
 To shield the key from LLM model consumption, the skill looks for the API key in your system keyring. The script uses the Python [keyring](https://pypi.org/project/keyring/) library, which supports a variety of operating system keyrings.
 
-On macOS:
+If on macOS:
 
-```bash
-security add-generic-password -s "fec-api" -a "api-key" -A -w
-```
+1. Open Keychain Access (Applications → Utilities → Keychain Access)
+2. Click File → New Password Item (or press ⌘N)
+3. Fill in:
+   - Keychain Item Name: `fec-api`
+   - Account Name: `api-key`
+   - Password: *your API key*
+4. Click Add
 
 When the script attempts to unlock Keychain, macOS will prompt you to allow access.
+
+For other supported systems, consult the [keyring documentation](https://keyring.readthedocs.io/en/latest/).
+
+> [!CAUTION]
+> The user experience of macOS Keychain is [not great](https://github.com/jaraco/keyring/issues/644) and will likely result in many repeated password prompts. This may tempt the user to "Always Allow" access to the key by Python. Doing so can expose the key to the LLM agent if it then tries to write Python to read the key itself. Other system keyrings may have a better user experience.
 
 ### Searching For Committees and Filings
 
