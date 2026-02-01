@@ -7,17 +7,17 @@
 # ]
 # ///
 """
-FEC API client with secure credential handling.
+FEC API CLI client with secure credential handling.
 
-This module uses the authenticated FEC API at api.open.fec.gov.
-API keys are retrieved securely via the system keyring (cross-platform).
+This is a standalone CLI for agent runtimes that don't support MCP (like Codex).
+The API key is retrieved from the system keyring on each invocation.
 
-Setup: See README.md for instructions on storing your API key securely.
-       Create the key manually (not via Python) so the OS prompts for approval.
+For Claude Code users, prefer the MCP server which loads the key once at startup
+and keeps it hidden from the conversation.
 
 Usage:
-    uv run fec_api.py search-committees "Utah Republican Party"
-    uv run fec_api.py get-filings C00089482 --limit 5
+    uv run fec_api_cli.py search-committees "Utah Republican Party"
+    uv run fec_api_cli.py get-filings C00089482 --limit 5
 
 Get an API key at: https://api.open.fec.gov/developers/
 """
@@ -35,6 +35,7 @@ import requests
 def sanitize_api_key(text: str) -> str:
     """Remove API key from text to prevent accidental exposure in logs/errors."""
     return re.sub(r"api_key=[^&\s]+", "api_key=REDACTED", text)
+
 
 FEC_API_BASE = "https://api.open.fec.gov/v1"
 KEYRING_SERVICE = "fec-api"
@@ -88,9 +89,7 @@ def get_api_key_from_keyring(
     except keyring.errors.KeyringError as e:
         raise CredentialError(f"Keyring access failed: {e}")
     except keyring.errors.InitError as e:
-        raise CredentialError(
-            f"Failed to initialize keyring backend: {e}"
-        )
+        raise CredentialError(f"Failed to initialize keyring backend: {e}")
 
 
 def get_api_key() -> str:
@@ -309,7 +308,10 @@ macOS quick setup:
             )
 
             if not results:
-                print(f"No filings found for committee '{args.committee_id}'", file=sys.stderr)
+                print(
+                    f"No filings found for committee '{args.committee_id}'",
+                    file=sys.stderr,
+                )
                 sys.exit(0)
 
             # Output key fields for each filing

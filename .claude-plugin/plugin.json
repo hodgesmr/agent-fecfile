@@ -1,0 +1,11 @@
+{
+  "name": "fecfile",
+  "description": "Analyze FEC campaign finance filings with secure API key handling",
+  "version": "2.0.0",
+  "author": {
+    "name": "Matt Hodges"
+  },
+  "homepage": "https://github.com/hodgesmr/agent-fecfile",
+  "repository": "https://github.com/hodgesmr/agent-fecfile",
+  "license": "MIT"
+}

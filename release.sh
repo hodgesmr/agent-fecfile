@@ -1,15 +1,25 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Extract version from SKILL.md frontmatter
-VERSION=$(grep -A2 '^metadata:' skills/fecfile/SKILL.md | grep 'version:' | sed 's/.*version: *"\([^"]*\)".*/\1/')
+# Extract version from plugin.json (primary source of truth)
+VERSION=$(grep '"version"' .claude-plugin/plugin.json | sed 's/.*"version": *"\([^"]*\)".*/\1/')
 
 if [[ -z "$VERSION" ]]; then
-    echo "Error: Could not extract version from skills/fecfile/SKILL.md"
+    echo "Error: Could not extract version from .claude-plugin/plugin.json"
     exit 1
 fi
 
 echo "Releasing version $VERSION"
+
+# Verify version matches in SKILL.md
+SKILL_VERSION=$(grep -A2 '^metadata:' skills/fecfile/SKILL.md | grep 'version:' | sed 's/.*version: *"\([^"]*\)".*/\1/')
+if [[ "$VERSION" != "$SKILL_VERSION" ]]; then
+    echo "Error: Version mismatch!"
+    echo "  plugin.json: $VERSION"
+    echo "  SKILL.md: $SKILL_VERSION"
+    echo "Update both files to match before releasing."
+    exit 1
+fi
 
 # Check for uncommitted changes
 if ! git diff --quiet || ! git diff --cached --quiet; then
