@@ -4,7 +4,7 @@
 
 ## FEC Filing Plugin for Claude Code
 
-A [Claude Code plugin](https://docs.anthropic.com/en/docs/claude-code/plugins) for analyzing Federal Election Commission (FEC) campaign finance filings. Includes an [Agent Skill](https://agentskills.io) and an MCP server for secure API access.
+A [Claude Code plugin](https://docs.anthropic.com/en/docs/claude-code/plugins) for analyzing Federal Election Commission (FEC) campaign finance filings. Includes an [Agent Skill](https://agentskills.io) and an [MCP server](https://modelcontextprotocol.io) for API access.
 
 This plugin enables AI agents to fetch, parse, and analyze FEC filings directly within agent sessions. Parsing and filtering happen outside the model context, allowing agents to programmatically reduce large filings before analysis, saving tokens and enabling efficient queries against filings of any size.
 
@@ -12,16 +12,15 @@ The plugin includes detailed field mappings for common form types and schedules,
 
 ## Features
 
-- Fetch and analyze FEC filings by filing ID
+- Fetch and analyze FEC filings by filing ID (Agent Skill)
 - Search for committees and filings via the FEC API (MCP server)
 - Support for major form types (F1, F2, F3, F99)
 - Detailed field mappings for contributions, disbursements, and schedules
-- **Secure API key handling**: Key loaded once at server startup, never exposed to the model
 - Auto-installing dependencies via uv
 
 ## Requirements
 
-- [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) or another MCP-compatible runtime (e.g., [Codex CLI](https://openai.github.io/codex/mcp/))
+- [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) or another MCP-compatible runtime (e.g., [Codex CLI](https://developers.openai.com/codex/cli/))
 - [uv](https://docs.astral.sh/uv/) (for running Python scripts)
 - Python 3.9+
 - An [FEC API key](https://api.open.fec.gov/developers/) (optional, for committee/filing search)
@@ -36,20 +35,20 @@ The easiest way to use this is as a Claude Code plugin. Clone the repository and
 # Clone to a permanent location
 git clone --branch latest git@github.com:hodgesmr/agent-fecfile.git ~/agent-fecfile
 
-# Load as a plugin (in Claude Code)
+# Load as a plugin in Claude Code
 claude --plugin-dir ~/agent-fecfile
 ```
 
 When loaded as a plugin:
 - The Agent Skill is automatically available
 - The MCP server starts automatically, providing `search_committees` and `get_filings` tools
-- The FEC API key is loaded once at startup and kept secure
+- The FEC API key is loaded once at startup
 
 To make the plugin permanent, add it to your Claude Code configuration.
 
-### Other MCP-Compatible Runtimes (Codex, etc.)
+### Other Compatible Runtimes (Codex, etc.)
 
-For agent runtimes that support MCP but not Claude Code plugins, you can:
+For agent runtimes that support Agent Skills and MCP but not Claude Code plugins, you can:
 
 1. **Install the Agent Skill** by symlinking to your runtime's skills directory:
 
@@ -68,15 +67,15 @@ ln -sfn ~/agent-fecfile/skills/fecfile ~/.codex/skills/fecfile
   "mcpServers": {
     "fec-api": {
       "command": "uv",
-      "args": ["run", "/path/to/agent-fecfile/mcp-server/server.py"]
+      "args": ["run", "~/agent-fecfile/mcp-server/server.py"]
     }
   }
 }
 ```
 
-The MCP server loads the FEC API key from the system keyring once at startup, keeping it secure.
+The MCP server loads the FEC API key from the system keyring once at startup.
 
-## Updating
+#### Updating
 
 ```bash
 cd ~/agent-fecfile && git fetch --tags --force && git checkout latest
@@ -172,12 +171,6 @@ To shield the key from LLM model consumption, the API key must be stored in your
 secret-tool store --label="FEC API Key" service fec-api username api-key
 ```
 
-**Windows:**
-
-Use the Credential Manager or configure keyring appropriately.
-
-For other supported systems, consult the [keyring documentation](https://keyring.readthedocs.io/en/latest/).
-
 ### Searching For Committees and Filings
 
 Once your API key is stored, queries become more powerful. You can search for committees and filings without knowing the filing ID in advance.
@@ -200,7 +193,23 @@ The MCP server provides `search_committees` and `get_filings` tools. The API key
   │ CPMI Solutions          │ $4,396.30 │ Direct Mailing         │ Dec 22 │
   ├─────────────────────────┼───────────┼────────────────────────┼────────┤
   │ NationBuilder           │ $2,925.00 │ Office Subscriptions   │ Dec 1  │
+  ├─────────────────────────┼───────────┼────────────────────────┼────────┤
+  │ NationBuilder           │ $2,646.00 │ Office Subscriptions   │ Dec 29 │
+  ├─────────────────────────┼───────────┼────────────────────────┼────────┤
+  │ Chartwells              │ $1,907.24 │ Event Registration Fee │ Dec 17 │
+  ├─────────────────────────┼───────────┼────────────────────────┼────────┤
+  │ Buckeye Premium Finance │ $1,071.48 │ Rent                   │ Dec 26 │
+  ├─────────────────────────┼───────────┼────────────────────────┼────────┤
+  │ Extra Space Storage     │ $487.00   │ Storage                │ Dec 2  │
+  ├─────────────────────────┼───────────┼────────────────────────┼────────┤
+  │ Extra Space Storage     │ $487.00   │ Storage                │ Dec 30 │
+  ├─────────────────────────┼───────────┼────────────────────────┼────────┤
+  │ Ring Central            │ $170.31   │ Telephone              │ Dec 11 │
+  ├─────────────────────────┼───────────┼────────────────────────┼────────┤
+  │ Intuit                  │ $123.57   │ Office Subscriptions   │ Dec 24 │
   └─────────────────────────┴───────────┴────────────────────────┴────────┘
+  The bulk of December spending was on direct mail operations (~$9,100 combined
+  to USPS and CPMI Solutions) and NationBuilder software subscriptions (~$5,600).
 ```
 
 ## Architecture
@@ -208,16 +217,18 @@ The MCP server provides `search_committees` and `get_filings` tools. The API key
 ```
 agent-fecfile/
 ├── .claude-plugin/
-│   └── plugin.json          # Plugin manifest (version: 2.0.0)
-├── .mcp.json                # MCP server configuration (for Claude Code)
+│   └── plugin.json          # Plugin manifest
+├── .mcp.json                # MCP server configuration
 ├── mcp-server/
-│   └── server.py            # MCP server (loads API key at startup)
+│   └── server.py            # MCP server (authenticated FEC API)
 └── skills/
     └── fecfile/
         ├── SKILL.md         # Agent Skill instructions
         ├── references/      # Form and schedule documentation
+        │   ├── FORMS.md        # Form type reference (F1, F2, F3, F99)
+        │   └── SCHEDULES.md    # Schedule field mappings (A, B, C, D, E)
         └── scripts/
-            └── fetch_filing.py  # Public FEC filing fetcher
+            └── fetch_filing.py  # Public FEC filing fetcher (public FEC API)
 ```
 
 The MCP server:
@@ -227,28 +238,11 @@ The MCP server:
 
 ## Security Notes
 
-- **API key security**: The FEC API key is loaded once at MCP server startup and held in memory. The key is never included in tool outputs or error messages visible to the model.
-
 - **Network access**: This plugin requires network access to fetch data from the FEC (`docquery.fec.gov`, `api.open.fec.gov`). It will not work in environments where external network access is restricted.
 
 - **Untrusted content**: FEC filings should be considered [untrusted content](https://simonwillison.net/2025/Jun/16/the-lethal-trifecta/). A malicious campaign sneaking prompt injections into the memo text field of their F99 is probably unlikely, but not impossible.
 
 - **Keyring access**: The MCP server accesses the keyring at startup. Monitor agent actions that request keyring access.
-
-> [!CAUTION]
-> The user experience of macOS Keychain is [not great](https://github.com/jaraco/keyring/issues/644) and will likely result in many repeated password prompts. This may tempt the user to "Always Allow" access to the key by Python. Doing so can expose the key to the LLM agent if it then tries to write Python to read the key itself. Other system keyrings may have a better user experience.
-
-## Skill Structure
-
-```
-skills/fecfile/
-├── SKILL.md            # Main skill instructions
-├── references/
-│   ├── FORMS.md        # Form type reference (F1, F2, F3, F99)
-│   └── SCHEDULES.md    # Schedule field mappings (A, B, C, D, E)
-└── scripts/
-    └── fetch_filing.py # Fetches FEC filing data (public API)
-```
 
 ## Acknowledgments
 
