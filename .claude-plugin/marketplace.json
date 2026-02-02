@@ -1,0 +1,20 @@
+{
+  "name": "agent-fecfile",
+  "owner": {
+    "name": "Matt Hodges"
+  },
+  "metadata": {
+    "description": "FEC campaign finance filing analysis plugin for Claude Code"
+  },
+  "plugins": [
+    {
+      "name": "fecfile",
+      "source": ".",
+      "description": "Analyze FEC campaign finance filings - search committees, fetch filings, and parse contributions and expenditures",
+      "homepage": "https://github.com/hodgesmr/agent-fecfile",
+      "repository": "https://github.com/hodgesmr/agent-fecfile",
+      "license": "MIT",
+      "keywords": ["fec", "federal election commission", "campaign finance", "elections", "politics"]
+    }
+  ]
+}

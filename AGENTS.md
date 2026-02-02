@@ -18,13 +18,14 @@ This repo contains a Claude Code plugin for analyzing FEC (Federal Election Comm
 ```
 agent-fecfile/
 ├── .claude-plugin/
-│   └── plugin.json              # Plugin manifest (version source of truth)
+│   ├── plugin.json              # Plugin manifest (version source of truth)
+│   └── marketplace.json         # Marketplace catalog for plugin distribution
 ├── .mcp.json                    # MCP server configuration
 ├── mcp-server/
-│   └── server.py                # MCP server (loads API key at startup)
+│   └── server.py                # MCP server (authenticated FEC API)
 ├── skills/fecfile/
-│   ├── SKILL.md                 # Main skill entrypoint and usage guide
-│   ├── references/
+│   ├── SKILL.md                 # Agent Skill instructions
+│   ├── references/              # Form and schedule documentation
 │   │   ├── FORMS.md             # Reference for FEC form types (F1, F2, F3, F99)
 │   │   └── SCHEDULES.md         # Field mappings for Schedules A, B, C, D, E
 │   └── scripts/

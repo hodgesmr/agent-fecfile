@@ -29,38 +29,39 @@ The plugin includes detailed field mappings for common form types and schedules,
 
 ### Claude Code Plugin (Recommended)
 
-The easiest way to use this is as a Claude Code plugin. Clone the repository and load it as a plugin:
+Install via the Claude Code plugin system:
 
-```bash
-# Clone to a permanent location
-git clone --branch latest git@github.com:hodgesmr/agent-fecfile.git ~/agent-fecfile
+```shell
+# Add the marketplace
+/plugin marketplace add hodgesmr/agent-fecfile
 
-# Load as a plugin in Claude Code
-claude --plugin-dir ~/agent-fecfile
+# Install the plugin
+/plugin install fecfile@agent-fecfile
 ```
 
-When loaded as a plugin:
-- The Agent Skill is automatically available
+When installed:
+- The Agent Skill (`fecfile`) is automatically available
 - The MCP server starts automatically, providing `search_committees` and `get_filings` tools
-- The FEC API key is loaded once at startup
 
-To make the plugin permanent, add it to your Claude Code configuration.
+To update to the latest version, run `/plugin marketplace update agent-fecfile`.
 
 ### Other Compatible Runtimes (Codex, etc.)
 
-For agent runtimes that support Agent Skills and MCP but not Claude Code plugins, you can:
+For agent runtimes that support Agent Skills and MCP but not Claude Code plugins:
 
-1. **Install the Agent Skill** by symlinking to your runtime's skills directory:
+1. **Clone the repository:**
 
 ```bash
-# Clone the repository
 git clone --branch latest git@github.com:hodgesmr/agent-fecfile.git ~/agent-fecfile
+```
 
-# Symlink to your agent's skills directory
+2. **Install the Agent Skill** by symlinking to your runtime's skills directory:
+
+```bash
 ln -sfn ~/agent-fecfile/skills/fecfile ~/.codex/skills/fecfile
 ```
 
-2. **Configure the MCP server** in your runtime's MCP configuration:
+3. **Configure the MCP server** in your runtime's MCP configuration:
 
 ```json
 {
@@ -75,15 +76,10 @@ ln -sfn ~/agent-fecfile/skills/fecfile ~/.codex/skills/fecfile
 
 The MCP server loads the FEC API key from the system keyring once at startup.
 
-#### Updating
+**Updating:**
 
 ```bash
 cd ~/agent-fecfile && git fetch --tags --force && git checkout latest
-```
-
-Or pin a specific version:
-```bash
-cd ~/agent-fecfile && git fetch && git checkout 2.0.0
 ```
 
 ## Usage
@@ -212,23 +208,26 @@ The MCP server provides `search_committees` and `get_filings` tools. The API key
   to USPS and CPMI Solutions) and NationBuilder software subscriptions (~$5,600).
 ```
 
-## Architecture
+## Project Structure
 
 ```
 agent-fecfile/
 ├── .claude-plugin/
-│   └── plugin.json          # Plugin manifest
-├── .mcp.json                # MCP server configuration
+│   ├── plugin.json              # Plugin manifest (version source of truth)
+│   └── marketplace.json         # Marketplace catalog for plugin distribution
+├── .mcp.json                    # MCP server configuration
 ├── mcp-server/
-│   └── server.py            # MCP server (authenticated FEC API)
-└── skills/
-    └── fecfile/
-        ├── SKILL.md         # Agent Skill instructions
-        ├── references/      # Form and schedule documentation
-        │   ├── FORMS.md        # Form type reference (F1, F2, F3, F99)
-        │   └── SCHEDULES.md    # Schedule field mappings (A, B, C, D, E)
-        └── scripts/
-            └── fetch_filing.py  # Public FEC filing fetcher (public FEC API)
+│   └── server.py                # MCP server (authenticated FEC API)
+├── skills/fecfile/
+│   ├── SKILL.md                 # Agent Skill instructions
+│   ├── references/              # Form and schedule documentation
+│   │   ├── FORMS.md             # Reference for FEC form types (F1, F2, F3, F99)
+│   │   └── SCHEDULES.md         # Field mappings for Schedules A, B, C, D, E
+│   └── scripts/
+│       └── fetch_filing.py      # Fetches FEC filing data (public API)
+├── README.md                    # Installation and usage for end users
+├── CHANGELOG.md                 # Version history
+└── release.sh                   # Automated release script
 ```
 
 The MCP server:
