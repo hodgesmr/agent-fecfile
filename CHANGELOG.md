@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Key held in memory, never exposed to the model
   - Works with any MCP-compatible runtime (Claude Code, Codex, etc.)
 - **Plugin manifest** (`.claude-plugin/plugin.json`): Defines plugin metadata and version
+- **Marketplace catalog** (`.claude-plugin/marketplace.json`): Enables installation via `/plugin marketplace add`
 - **MCP configuration** (`.mcp.json`): Configures the MCP server for Claude Code
 
 ### Changed
@@ -27,13 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
-- `skills/fecfile/scripts/fec_api.py` - functionality moved to MCP server and standalone CLI
-
-### Security
-
-- API key now loaded once at MCP server startup instead of on each script invocation
-- Key is held in memory and never passed to the model
-- Improved key isolation in plugin mode vs standalone mode
+- `skills/fecfile/scripts/fec_api.py` - functionality moved to MCP server
 
 ## [1.1.0] - 2026-02-01
 

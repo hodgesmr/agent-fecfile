@@ -222,6 +222,11 @@ Use `search_committees` tool with query "Utah Republican Party":
     "id": "C00089482",
     "is_active": true,
     "name": "UTAH REPUBLICAN PARTY"
+  },
+  {
+    "id": "C00174144",
+    "is_active": false,
+    "name": "UTAH COUNTY REPUBLICAN PARTY/FEC ACCT"
   }
 ]
 ```
@@ -243,11 +248,41 @@ Use `get_filings` tool with committee_id "C00089482":
     "total_receipts": 42655.8,
     "total_disbursements": 21283.49,
     "amendment_indicator": "N"
+  },
+  {
+    "filing_id": null,
+    "form_type": "FRQ",
+    "receipt_date": "2025-05-21T00:00:00",
+    "coverage_start_date": "2025-03-01",
+    "coverage_end_date": "2025-03-31",
+    "total_receipts": null,
+    "total_disbursements": null,
+    "amendment_indicator": null
+  },
+  {
+    "filing_id": 1893645,
+    "form_type": "F3X",
+    "receipt_date": "2025-05-20T00:00:00",
+    "coverage_start_date": "2025-04-01",
+    "coverage_end_date": "2025-04-30",
+    "total_receipts": 25100.23,
+    "total_disbursements": 15024.56,
+    "amendment_indicator": "N"
+  },
+  {
+    "filing_id": 1889675,
+    "form_type": "F3X",
+    "receipt_date": "2025-04-20T00:00:00",
+    "coverage_start_date": "2025-03-01",
+    "coverage_end_date": "2025-03-31",
+    "total_receipts": 33363.33,
+    "total_disbursements": 37921.03,
+    "amendment_indicator": "N"
   }
 ]
 ```
 
-Choose the appropriate `filing_id` based on the user's query.
+Choose the appropriate `filing_id` based on the user's query. You may need to broaden the limit flag depending on the initial results, or select more than one `filing_id` depending on the user's query.
 
 **Step 3: Check filing size**
 ```bash
@@ -325,6 +360,8 @@ uv run scripts/fetch_filing.py 1896830 --schedule B 2>&1 | uv run /tmp/top_expen
 | `-coverage_end_date` | You want filings by reporting period (e.g., "most recent quarter") |
 | `-total_receipts` | You want filings with the highest fundraising totals first |
 
+Note: `-receipt_date` can have ties when multiple filings arrive the same day. `-coverage_end_date` is useful for finding the latest reporting period but doesn't account for amendments filed later
+
 ## Finding Filing IDs (Manual)
 
 If the FEC API is not set up, filing IDs can be found via:
@@ -337,7 +374,6 @@ When analyzing FEC filings:
 - Start with your best judgment about whether this filing has unusual aspects (no activity is not unusual)
 - Write in a simple, direct style
 - Group related information together in coherent sections
-- Avoid excessive formatting or bold text
 
 ## Form Types
 
