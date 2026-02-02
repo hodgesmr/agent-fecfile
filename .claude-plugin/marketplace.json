@@ -10,7 +10,7 @@
     {
       "name": "fecfile",
       "source": ".",
-      "description": "Analyze FEC campaign finance filings - search committees, fetch filings, and parse contributions and expenditures",
+      "description": "Analyze FEC (Federal Election Commission) campaign finance filings. Use when working with FEC filing IDs, campaign finance data, contributions, disbursements, or political committee financial reports.",
       "homepage": "https://github.com/hodgesmr/agent-fecfile",
       "repository": "https://github.com/hodgesmr/agent-fecfile",
       "license": "MIT",
