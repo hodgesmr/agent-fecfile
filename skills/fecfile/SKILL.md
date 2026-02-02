@@ -360,7 +360,7 @@ uv run scripts/fetch_filing.py 1896830 --schedule B 2>&1 | uv run /tmp/top_expen
 | `-coverage_end_date` | You want filings by reporting period (e.g., "most recent quarter") |
 | `-total_receipts` | You want filings with the highest fundraising totals first |
 
-Note: `-receipt_date` can have ties when multiple filings arrive the same day. `-coverage_end_date` is useful for finding the latest reporting period but doesn't account for amendments filed later
+Note: `-receipt_date` can have ties when multiple filings arrive the same day. `-coverage_end_date` is useful for finding the latest reporting period but doesn't account for amendments filed later.
 
 ## Finding Filing IDs (Manual)
 
