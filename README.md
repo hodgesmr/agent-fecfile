@@ -43,6 +43,8 @@ When installed:
 - The Agent Skill (`fecfile`) is automatically available
 - The MCP server starts automatically, providing `search_committees` and `get_filings` tools
 
+**Updating:**
+
 To update to the latest version, run `/plugin marketplace update agent-fecfile`.
 
 ### Other Compatible Runtimes (Codex, etc.)
@@ -58,23 +60,19 @@ git clone --branch latest git@github.com:hodgesmr/agent-fecfile.git ~/agent-fecf
 2. **Install the Agent Skill** by symlinking to your runtime's skills directory:
 
 ```bash
+# Codex CLI Global install
 ln -sfn ~/agent-fecfile/skills/fecfile ~/.codex/skills/fecfile
 ```
 
-3. **Configure the MCP server** in your runtime's MCP configuration:
+3. **Configure the MCP server** using your runtime's MCP configuration:
 
-```json
-{
-  "mcpServers": {
-    "fec-api": {
-      "command": "uv",
-      "args": ["run", "~/agent-fecfile/mcp-server/server.py"]
-    }
-  }
-}
+```bash
+# Codex CLI
+codex mcp add fec-api -- uv run ~/agent-fecfile/mcp-server/server.py
 ```
 
-The MCP server loads the FEC API key from the system keyring once at startup.
+> [!IMPORTANT]
+> The MCP server loads the FEC API key from the system keyring once at startup. It is expected to see system prompts to authorize Python's access to the key this point.
 
 **Updating:**
 
@@ -241,7 +239,7 @@ The MCP server:
 
 - **Untrusted content**: FEC filings should be considered [untrusted content](https://simonwillison.net/2025/Jun/16/the-lethal-trifecta/). A malicious campaign sneaking prompt injections into the memo text field of their F99 is probably unlikely, but not impossible.
 
-- **Keyring access**: The MCP server accesses the keyring at startup. Monitor agent actions that request keyring access.
+- **Keyring access**: The MCP server accesses the keyring **once at startup**. Most MCP runtimes start the server at the beginning of a session, so you should expect a system prompt (e.g., "Python wants to access your keychain") when your agent session begins. This is normal. The key is held in the MCP server's memory for the session duration. You should **not** see keyring prompts at any other time; if you do, investigate.
 
 ## Acknowledgments
 
