@@ -9,7 +9,7 @@
   "plugins": [
     {
       "name": "fecfile",
-      "source": ".",
+      "source": "./",
       "description": "Analyze FEC (Federal Election Commission) campaign finance filings. Use when working with FEC filing IDs, campaign finance data, contributions, disbursements, or political committee financial reports.",
       "homepage": "https://github.com/hodgesmr/agent-fecfile",
       "repository": "https://github.com/hodgesmr/agent-fecfile",
