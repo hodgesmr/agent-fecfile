@@ -31,13 +31,15 @@ The plugin includes detailed field mappings for common form types and schedules,
 
 Install via the Claude Code plugin system:
 
-```shell
+```text
 # Add the marketplace
 /plugin marketplace add hodgesmr/agent-fecfile
 
 # Install the plugin
 /plugin install fecfile@agent-fecfile
 ```
+
+You may need to restart your Claude Code session to properly load the Agent Skill and MCP Server.
 
 When installed:
 - The Agent Skill (`fecfile`) is automatically available
