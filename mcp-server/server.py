@@ -3,7 +3,7 @@
 # requires-python = ">=3.9"
 # dependencies = [
 #     "mcp>=1.26.0",
-#     "requests>=2.32.0",
+#     "httpx>=0.28.0",
 #     "keyring>=25.7.0",
 # ]
 # ///
@@ -26,8 +26,8 @@ import re
 import sys
 from typing import Optional
 
+import httpx
 import keyring
-import requests
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
 from mcp.types import Tool, TextContent
@@ -49,6 +49,7 @@ class FECAPIServer:
     def __init__(self):
         self.server = Server("fec-api")
         self.api_key: Optional[str] = None
+        self.http_client: Optional[httpx.AsyncClient] = None
         self._setup_handlers()
 
     def _load_api_key(self) -> Optional[str]:
@@ -174,7 +175,7 @@ class FECAPIServer:
                 "q": query,
             }
 
-            response = requests.get(
+            response = await self.http_client.get(
                 f"{FEC_API_BASE}/names/committees/",
                 params=params,
                 timeout=30,
@@ -199,7 +200,7 @@ class FECAPIServer:
                 )
             ]
 
-        except requests.RequestException as e:
+        except httpx.HTTPError as e:
             return [
                 TextContent(
                     type="text",
@@ -244,7 +245,7 @@ class FECAPIServer:
             if report_type:
                 params["report_type"] = report_type
 
-            response = requests.get(
+            response = await self.http_client.get(
                 f"{FEC_API_BASE}/committee/{committee_id}/filings/",
                 params=params,
                 timeout=30,
@@ -285,7 +286,7 @@ class FECAPIServer:
                 )
             ]
 
-        except requests.RequestException as e:
+        except httpx.HTTPError as e:
             return [
                 TextContent(
                     type="text",
@@ -307,12 +308,13 @@ class FECAPIServer:
                 file=sys.stderr,
             )
 
-        async with stdio_server() as (read_stream, write_stream):
-            await self.server.run(
-                read_stream,
-                write_stream,
-                self.server.create_initialization_options(),
-            )
+        async with httpx.AsyncClient() as self.http_client:
+            async with stdio_server() as (read_stream, write_stream):
+                await self.server.run(
+                    read_stream,
+                    write_stream,
+                    self.server.create_initialization_options(),
+                )
 
 
 async def main():
