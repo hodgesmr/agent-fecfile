@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2026-02-02
+
+### Added
+
+- **Claude Code Plugin architecture**: The project is now a Claude Code plugin with bundled MCP server
+- **MCP server** (`mcp-server/server.py`): Provides `search_committees` and `get_filings` tools
+  - Loads FEC API key from system keyring **once at startup**
+  - Key held in memory, never exposed to the model
+  - Works with any MCP-compatible runtime (Claude Code, Codex, etc.)
+- **Plugin manifest** (`.claude-plugin/plugin.json`): Defines plugin metadata and version
+- **Marketplace catalog** (`.claude-plugin/marketplace.json`): Enables installation via `/plugin marketplace add`
+- **MCP configuration** (`.mcp.json`): Configures the MCP server for Claude Code
+
+### Changed
+
+- **BREAKING**: Project restructured as a Claude Code plugin
+- Moved FEC API functionality from `scripts/fec_api.py` to MCP server
+- MCP server uses `httpx` for async HTTP (instead of blocking `requests`)
+- Updated SKILL.md to document both MCP tools and standalone CLI usage
+- Updated README with plugin installation instructions and comparison table
+- Version now tracked in plugin.json (single source of truth)
+
+### Removed
+
+- `skills/fecfile/scripts/fec_api.py` - functionality moved to MCP server
+
 ## [1.1.0] - 2026-02-01
 
 ### Added
@@ -91,6 +117,7 @@ Initial feature-complete release (pre-versioning).
 - Basic `fetch_filing.py` script for fetching FEC filings
 - Acknowledgments section crediting fecfile library and llm-fecfile inspiration
 
+[2.0.0]: https://github.com/hodgesmr/agent-fecfile/compare/1.1.0...2.0.0
 [1.1.0]: https://github.com/hodgesmr/agent-fecfile/compare/1.0.5...1.1.0
 [1.0.5]: https://github.com/hodgesmr/agent-fecfile/compare/1.0.4...1.0.5
 [1.0.4]: https://github.com/hodgesmr/agent-fecfile/compare/1.0.3...1.0.4

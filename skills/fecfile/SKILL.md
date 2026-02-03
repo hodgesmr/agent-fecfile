@@ -5,7 +5,7 @@ compatibility: Requires uv and access to the internet
 license: MIT
 metadata:
   author: Matt Hodges
-  version: "1.1.0"
+  version: "2.0.0"
 ---
 
 # FEC Filing Analysis
@@ -17,7 +17,7 @@ This skill enables analysis of Federal Election Commission campaign finance fili
 - [uv](https://docs.astral.sh/uv/) must be installed
 - Python 3.9+
 
-Dependencies are automatically installed when running the script with `uv run`.
+Dependencies are automatically installed when running scripts with `uv run`.
 
 ## First-Time Check
 
@@ -184,32 +184,38 @@ This processes hundreds of thousands of records using constant memory.
 4. **Streaming mode** - Use `--stream` with inline Python consumers for constant-memory processing
 5. **Limit output** - Use `.head()`, `.nlargest()`, `.nsmallest()` to cap results
 
-## API Key Security
+## Finding Filings by Candidate/Committee Name
 
-**IMPORTANT**: Never output or log the FEC API key. The key is retrieved securely from the system keyring, but can be accidentally exposed in:
+When the user asks about a candidate or committee's filings without providing a filing ID, use the MCP tools to discover the filing ID.
 
-- Error messages from `requests` (which include the full URL)
+### MCP Tools
+
+The `fec-api` MCP server provides two tools:
+
+- **`search_committees`**: Search for committees by name → returns committee IDs
+- **`get_filings`**: Get filings for a committee ID → returns filing IDs and metadata
+
+The MCP server loads the FEC API key from the system keyring once at startup, keeping it secure and hidden from the conversation. The API key is never visible to the model.
+
+### API Key Security
+
+**IMPORTANT**: Never output or log the FEC API key. The key is loaded once at server startup and kept in memory—it is never exposed to the model.
+
+The key can be accidentally exposed in:
+- Error messages from HTTP clients (which may include the full URL)
 - Debug output or logging
 - Custom scripts that print request parameters
 
-When writing analysis scripts, never print URLs, request parameters, or raw exception messages that might contain the API key. The `fec_api.py` script sanitizes error output automatically, but custom scripts must handle this manually.
+The MCP server sanitizes error output to prevent key exposure.
 
-## Finding Filings by Candidate/Committee Name
+### Workflow Example
 
-When the user asks about a candidate or committee's filings without providing a filing ID, use `fec_api.py` to discover the filing ID. This requires the user to have set up an API key (see README).
-
-### Workflow
-
-1. **Search for the committee** → get committee ID
-2. **Get filings for that committee** → get filing ID(s)
-3. **Fetch and analyze the filing** → use `fetch_filing.py`
-
-### Example: "What are the top expenditures in Utah Republican Party's most recent filing?"
+**"What are the top expenditures in Utah Republican Party's most recent filing?"**
 
 **Step 1: Find the committee**
-```bash
-uv run scripts/fec_api.py search-committees "Utah Republican Party"
-```
+
+Use `search_committees` tool with query "Utah Republican Party":
+
 ```json
 [
   {
@@ -225,15 +231,15 @@ uv run scripts/fec_api.py search-committees "Utah Republican Party"
 ]
 ```
 
-Choose the appropriate `id` based on the user's query. Users may not know the exact name of the committee they're searching for. You may need to run multiple searches with alternate committee name queries to find the user's desired committee. You may (but not necessarily) need to present potential results to the user to have them confirm which one they're looking for.
+Choose the appropriate `id` based on the user's query. Users may not know the exact name of the committee they're searching for. You may need to run multiple searches with alternate committee name queries to find the user's desired committee.
 
 **Step 2: Get recent filings**
-```bash
-uv run scripts/fec_api.py get-filings C00089482 --limit 5
-```
+
+Use `get_filings` tool with committee_id "C00089482":
+
 ```json
 [
-    {
+  {
     "filing_id": 1896830,
     "form_type": "F3X",
     "receipt_date": "2025-06-20T00:00:00",
@@ -276,7 +282,7 @@ uv run scripts/fec_api.py get-filings C00089482 --limit 5
 ]
 ```
 
-Choose the appropriate `filing_id` based on the user's query. You may need to broader your `--limit` depending on the initial results, or select more than one `filing_id` depending on the user's query.
+Choose the appropriate `filing_id` based on the user's query. You may need to broaden the limit flag depending on the initial results, or select more than one `filing_id` depending on the user's query.
 
 **Step 3: Check filing size**
 ```bash
@@ -317,34 +323,28 @@ EOF
 uv run scripts/fetch_filing.py 1896830 --schedule B 2>&1 | uv run /tmp/top_expenditures.py
 ```
 
-### Command Reference
+### MCP Tool Reference
 
-**Search for committees by name:**
-```bash
-uv run scripts/fec_api.py search-committees "QUERY" [--limit N]
-```
+**search_committees**
 
-**Get filings for a committee:**
-```bash
-uv run scripts/fec_api.py get-filings COMMITTEE_ID [--limit N] [--form-type TYPE] [--cycle YEAR] [--report-type TYPE] [--sort FIELD] [--include-amended]
-```
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `query` | string | Yes | Committee name or partial name to search |
+| `limit` | integer | No | Maximum results (default: 20) |
 
-| Option | Description |
-|--------|-------------|
-| `--limit N` | Maximum results (default: 10) |
-| `--form-type TYPE` | Filter by form: `F3` (House/Senate), `F3P` (Presidential), `F3X` (PACs/Parties) |
-| `--cycle YEAR` | Filter by two-year election cycle (e.g., 2024, 2026) |
-| `--report-type TYPE` | Filter by report period: `Q1`, `Q2`, `Q3`, `YE`, `MY`, `12G`, `30G`, etc. |
-| `--sort FIELD` | Sort field with `-` prefix for descending (default: `-receipt_date`) |
-| `--include-amended` | Include superseded amendments (default: only current versions) |
+**get_filings**
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `committee_id` | string | Yes | FEC committee ID (e.g., C00089482) |
+| `limit` | integer | No | Maximum results (default: 10) |
+| `form_type` | string | No | Filter by form: F3, F3P, F3X |
+| `cycle` | integer | No | Filter by two-year election cycle (e.g., 2024) |
+| `report_type` | string | No | Filter by report period: Q1, Q2, Q3, YE, MY, 12G, 30G |
+| `sort` | string | No | Sort field with '-' prefix for descending (default: -receipt_date) |
+| `include_amended` | boolean | No | Include superseded amendments (default: false) |
 
 **Sorting options:**
-
-By default, results are sorted by `-receipt_date` (most recently received first). Use `-` prefix for descending order. When specifying a descending sort, use `=` syntax:
-
-```bash
-uv run scripts/fec_api.py get-filings C00089482 --sort=-coverage_end_date
-```
 
 | Category | Fields |
 |----------|--------|
@@ -374,7 +374,6 @@ When analyzing FEC filings:
 - Start with your best judgment about whether this filing has unusual aspects (no activity is not unusual)
 - Write in a simple, direct style
 - Group related information together in coherent sections
-- Avoid excessive formatting or bold text
 
 ## Form Types
 

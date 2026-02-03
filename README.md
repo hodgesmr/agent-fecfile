@@ -2,57 +2,82 @@
 
 ![agent-fecfile](./agent-fecfile.jpeg)
 
-## FEC Filing Agent Skill
+## FEC Filing Plugin for Claude Code
 
-An [Agent Skill](https://agentskills.io) for analyzing Federal Election Commission (FEC) campaign finance filings.
+A [Claude Code plugin](https://docs.anthropic.com/en/docs/claude-code/plugins) for analyzing Federal Election Commission (FEC) campaign finance filings. Includes an [Agent Skill](https://agentskills.io) and an [MCP server](https://modelcontextprotocol.io) for API access.
 
-This skill enables AI agents to fetch, parse, and analyze FEC filings directly within agent sessions. Parsing and filtering happen outside the model context, allowing agents to programmatically reduce large filings before analysis, saving tokens and enabling efficient queries against filings of any size.
+This plugin enables AI agents to fetch, parse, and analyze FEC filings directly within agent sessions. Parsing and filtering happen outside the model context, allowing agents to programmatically reduce large filings before analysis, saving tokens and enabling efficient queries against filings of any size.
 
-The skill includes detailed field mappings for common form types and schedules, helping agents accurately interpret campaign finance data like contributions, disbursements, and committee information.
+The plugin includes detailed field mappings for common form types and schedules, helping agents accurately interpret campaign finance data like contributions, disbursements, and committee information.
 
 ## Features
 
-- Fetch and analyze FEC filings by filing ID
-- Search for committees and filings via the FEC API
+- Fetch and analyze FEC filings by filing ID (Agent Skill)
+- Search for committees and filings via the FEC API (MCP server)
 - Support for major form types (F1, F2, F3, F99)
 - Detailed field mappings for contributions, disbursements, and schedules
 - Auto-installing dependencies via uv
 
 ## Requirements
 
-- An agent runtime that supports Agent Skills (e.g., [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) or [Codex CLI](https://developers.openai.com/codex/cli/))
-- [uv](https://docs.astral.sh/uv/) (This skill uses `uv` to manage its own dependencies in isolation)
-- An [FEC API key](https://api.open.fec.gov/developers/) (optional, for committee/filing search)
+- [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) or another MCP-compatible runtime (e.g., [Codex CLI](https://developers.openai.com/codex/cli/))
+- [uv](https://docs.astral.sh/uv/) (for running Python scripts)
 - Python 3.9+
+- An [FEC API key](https://api.open.fec.gov/developers/) (optional, for committee/filing search)
 
-## Installation (Global)
+## Installation
 
-Clone the repository to a permanent location and symlink the skill into your runtime's skills directory.
+### Claude Code Plugin (Recommended)
+
+Install via the Claude Code plugin system:
+
+```shell
+# Add the marketplace
+/plugin marketplace add hodgesmr/agent-fecfile
+
+# Install the plugin
+/plugin install fecfile@agent-fecfile
+```
+
+When installed:
+- The Agent Skill (`fecfile`) is automatically available
+- The MCP server starts automatically, providing `search_committees` and `get_filings` tools
+
+**Updating:**
+
+To update to the latest version, run `/plugin marketplace update agent-fecfile`.
+
+### Other Compatible Runtimes (Codex, etc.)
+
+For agent runtimes that support Agent Skills and MCP but not Claude Code plugins:
+
+1. **Clone the repository:**
 
 ```bash
 git clone --branch latest git@github.com:hodgesmr/agent-fecfile.git ~/agent-fecfile
 ```
 
-**Symlink to your agent's skills directory:**
-```bash
-# Claude Code CLI
-ln -sfn ~/agent-fecfile/skills/fecfile ~/.claude/skills/fecfile
+2. **Install the Agent Skill** by symlinking to your runtime's skills directory:
 
-# Codex CLI
+```bash
+# Codex CLI Global install
 ln -sfn ~/agent-fecfile/skills/fecfile ~/.codex/skills/fecfile
 ```
 
-Replace the target path with your agent runtime's skill directory as needed.
+3. **Configure the MCP server** using your runtime's MCP configuration:
 
-## Updating
+```bash
+# Codex CLI
+codex mcp add fec-api -- uv run ~/agent-fecfile/mcp-server/server.py
+```
+
+> [!IMPORTANT]
+> The MCP server loads the FEC API key from the system keyring once at startup. It is expected to see system prompts to authorize Python's access to the key at this point.
+
+**Updating:**
 
 ```bash
 cd ~/agent-fecfile && git fetch --tags --force && git checkout latest
-```
-
-Or pin a specific version:
-```bash
-cd ~/agent-fecfile && git fetch && git checkout 1.0.0
 ```
 
 ## Usage
@@ -112,7 +137,7 @@ If you already have an FEC filing ID, you can work with it directly, without nee
 
 ### FEC API Setup (Optional)
 
-The skill includes `fec_api.py` for searching committees and filings via the authenticated FEC API.
+The MCP server provides committee and filing search via the authenticated FEC API.
 
 #### 1. Get an API Key
 
@@ -122,9 +147,9 @@ The skill includes `fec_api.py` for searching committees and filings via the aut
 
 #### 2. Store Your API Key
 
-To shield the key from LLM model consumption, the skill looks for the API key in your system keyring. The script uses the Python [keyring](https://pypi.org/project/keyring/) library, which supports a variety of operating system keyrings.
+To shield the key from LLM model consumption, the API key must be stored in your system keyring. The MCP server uses the Python [keyring](https://pypi.org/project/keyring/) library, which supports a variety of operating system keyrings.
 
-If on macOS:
+**macOS:**
 
 1. Open Keychain Access (Applications → Utilities → Keychain Access)
 2. Click File → New Password Item (or press ⌘N)
@@ -134,16 +159,11 @@ If on macOS:
    - Password: *your API key*
 4. Click Add
 
-When the script attempts to unlock Keychain, macOS will prompt you to allow access.
-
-For other supported systems, consult the [keyring documentation](https://keyring.readthedocs.io/en/latest/).
-
-> [!CAUTION]
-> The user experience of macOS Keychain is [not great](https://github.com/jaraco/keyring/issues/644) and will likely result in many repeated password prompts. This may tempt the user to "Always Allow" access to the key by Python. Doing so can expose the key to the LLM agent if it then tries to write Python to read the key itself. Other system keyrings may have a better user experience.
-
 ### Searching For Committees and Filings
 
-Once your API key is stored, queries become more powerful. You can use the agent skill to search for committees and filings for you.
+Once your API key is stored, queries become more powerful. You can search for committees and filings without knowing the filing ID in advance.
+
+The MCP server provides `search_committees` and `get_filings` tools. The API key is loaded once at server startup and kept in memory—it is never visible to the model.
 
 ```text
 ❯ What are the top expenditures in Utah Republican Party's most recent filing?
@@ -180,24 +200,40 @@ Once your API key is stored, queries become more powerful. You can use the agent
   to USPS and CPMI Solutions) and NationBuilder software subscriptions (~$5,600).
 ```
 
+## Project Structure
+
+```
+agent-fecfile/
+├── .claude-plugin/
+│   ├── plugin.json              # Plugin manifest (version source of truth)
+│   └── marketplace.json         # Marketplace catalog for plugin distribution
+├── .mcp.json                    # MCP server configuration
+├── mcp-server/
+│   └── server.py                # MCP server (authenticated FEC API)
+├── skills/fecfile/
+│   ├── SKILL.md                 # Agent Skill instructions
+│   ├── references/              # Form and schedule documentation
+│   │   ├── FORMS.md             # Reference for FEC form types (F1, F2, F3, F99)
+│   │   └── SCHEDULES.md         # Field mappings for Schedules A, B, C, D, E
+│   └── scripts/
+│       └── fetch_filing.py      # Fetches FEC filing data (public API)
+├── README.md                    # Installation and usage for end users
+├── CHANGELOG.md                 # Version history
+└── release.sh                   # Automated release script
+```
+
+The MCP server:
+- Loads the FEC API key from keyring **once at startup**
+- Holds the key in memory, never exposing it to the model
+- Provides `search_committees` and `get_filings` tools
+
 ## Security Notes
 
-- **Network access**: This skill requires network access to fetch data from the FEC (`docquery.fec.gov`). It will not work in environments where external network access is restricted.
+- **Network access**: This plugin requires network access to fetch data from the FEC (`docquery.fec.gov`, `api.open.fec.gov`). It will not work in environments where external network access is restricted.
+
 - **Untrusted content**: FEC filings should be considered [untrusted content](https://simonwillison.net/2025/Jun/16/the-lethal-trifecta/). A malicious campaign sneaking prompt injections into the memo text field of their F99 is probably unlikely, but not impossible.
-- **Keyring access**: Even though the API key is securely stored in the system keyring, the agent may still attempt to access it by writing bespoke scripts. Always monitor the agent's attempted actions before unlocking access to the secret store.
 
-## Skill Structure
-
-```
-skills/fecfile/
-├── SKILL.md            # Main skill instructions
-├── references/
-│   ├── FORMS.md        # Form type reference (F1, F2, F3, F99)
-│   └── SCHEDULES.md    # Schedule field mappings (A, B, C, D, E)
-└── scripts/
-    ├── fetch_filing.py # Fetches FEC filing data (public API)
-    └── fec_api.py      # Committee and filing search (authenticated API)
-```
+- **Keyring access**: The MCP server accesses the keyring **once at startup**. Most MCP runtimes start the server at the beginning of a session, so you should expect a system prompt (e.g., "Python wants to access your keychain") when your agent session begins. This is normal. The key is held in the MCP server's memory for the session duration. You should **not** see keyring prompts at any other time; if you do, investigate.
 
 ## Acknowledgments
 
