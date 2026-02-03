@@ -72,7 +72,7 @@ codex mcp add fec-api -- uv run ~/agent-fecfile/mcp-server/server.py
 ```
 
 > [!IMPORTANT]
-> The MCP server loads the FEC API key from the system keyring once at startup. It is expected to see system prompts to authorize Python's access to the key this point.
+> The MCP server loads the FEC API key from the system keyring once at startup. It is expected to see system prompts to authorize Python's access to the key at this point.
 
 **Updating:**
 

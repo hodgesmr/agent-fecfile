@@ -7,7 +7,7 @@ This repo contains a Claude Code plugin for analyzing FEC (Federal Election Comm
 - **Plugin name**: `fecfile`
 - **Skill name**: `fecfile`
 - **MCP server**: `fec-api` (provides `search_committees` and `get_filings` tools)
-- **Dependencies**: `fecfile`, `mcp`, `requests`, `keyring` - managed via inline script metadata (PEP 723), auto-installed by `uv run`
+- **Dependencies**: `fecfile`, `mcp`, `httpx`, `keyring` - managed via inline script metadata (PEP 723), auto-installed by `uv run`
 - **Data sources**:
   - Public: `docquery.fec.gov`
   - Authenticated: `api.open.fec.gov` (via MCP server)

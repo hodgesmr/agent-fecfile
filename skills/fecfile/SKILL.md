@@ -202,7 +202,7 @@ The MCP server loads the FEC API key from the system keyring once at startup, ke
 **IMPORTANT**: Never output or log the FEC API key. The key is loaded once at server startup and kept in memory—it is never exposed to the model.
 
 The key can be accidentally exposed in:
-- Error messages from `requests` (which include the full URL)
+- Error messages from HTTP clients (which may include the full URL)
 - Debug output or logging
 - Custom scripts that print request parameters
 

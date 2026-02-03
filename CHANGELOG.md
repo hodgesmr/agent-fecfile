@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.0.0] - 2026-02-01
+## [2.0.0] - 2026-02-02
 
 ### Added
 
@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **BREAKING**: Project restructured as a Claude Code plugin
 - Moved FEC API functionality from `scripts/fec_api.py` to MCP server
+- MCP server uses `httpx` for async HTTP (instead of blocking `requests`)
 - Updated SKILL.md to document both MCP tools and standalone CLI usage
 - Updated README with plugin installation instructions and comparison table
 - Version now tracked in plugin.json (single source of truth)
