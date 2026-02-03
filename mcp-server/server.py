@@ -11,8 +11,9 @@
 FEC API MCP Server
 
 An MCP server that provides secure access to the FEC API. The API key is loaded
-from the system keyring at startup and held in memory, preventing the LLM from
-ever seeing or accessing the credential.
+lazily from the system keyring on first tool use and cached, preventing the LLM
+from ever seeing or accessing the credential. This lazy loading avoids keychain
+prompts at startup when the user isn't doing FEC work.
 
 Tools:
     - search_committees: Search for FEC committees by name
@@ -48,9 +49,16 @@ class FECAPIServer:
 
     def __init__(self):
         self.server = Server("fec-api")
-        self.api_key: Optional[str] = None
+        self._api_key: Optional[str] = None
         self.http_client: Optional[httpx.AsyncClient] = None
         self._setup_handlers()
+
+    @property
+    def api_key(self) -> Optional[str]:
+        """Lazily load and cache the API key on first access."""
+        if self._api_key is None:
+            self._api_key = self._load_api_key()
+        return self._api_key
 
     def _load_api_key(self) -> Optional[str]:
         """
@@ -296,18 +304,6 @@ class FECAPIServer:
 
     async def run(self):
         """Start the MCP server."""
-        # Load API key at startup - only once
-        self.api_key = self._load_api_key()
-
-        if self.api_key:
-            print("FEC API key loaded from keyring", file=sys.stderr)
-        else:
-            print(
-                "Warning: FEC API key not found in keyring. "
-                "Committee search and filing lookup will be unavailable.",
-                file=sys.stderr,
-            )
-
         async with httpx.AsyncClient() as self.http_client:
             async with stdio_server() as (read_stream, write_stream):
                 await self.server.run(

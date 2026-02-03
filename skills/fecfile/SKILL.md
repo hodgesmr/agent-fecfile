@@ -59,7 +59,7 @@ These files contain the authoritative field mappings. If a field name isn't docu
 
 ## Handling Large Filings
 
-FEC filings vary enormously in size. Small filings (like state party monthly reports) may have only a few dozen itemizations and can be used directly. However, major committees like ActBlue, WinRed, and presidential campaigns can have hundreds of thousands of itemizations in a single filing. **Do not dump large filing data directly into the context window.**
+FEC filings vary enormously in size. Small filings (like state party monthly reports) may have only a few dozen itemizations and can be used directly. However, major committees like ActBlue, WinRed, and presidential campaigns can have hundreds of thousands of itemizations in a single filing. **Do not dump large filing data directly into the context window. Avoid streaming large filings to stdout.**
 
 ### Checking Size
 
@@ -195,11 +195,11 @@ The `fec-api` MCP server provides two tools:
 - **`search_committees`**: Search for committees by name → returns committee IDs
 - **`get_filings`**: Get filings for a committee ID → returns filing IDs and metadata
 
-The MCP server loads the FEC API key from the system keyring once at startup, keeping it secure and hidden from the conversation. The API key is never visible to the model.
+The MCP server loads the FEC API key from the system keyring on first tool use, keeping it secure and hidden from the conversation. The API key is never visible to the model.
 
 ### API Key Security
 
-**IMPORTANT**: Never output or log the FEC API key. The key is loaded once at server startup and kept in memory—it is never exposed to the model.
+**IMPORTANT**: Never output or log the FEC API key. The key is loaded on first tool use, cached in memory, and never exposed to the model.
 
 The key can be accidentally exposed in:
 - Error messages from HTTP clients (which may include the full URL)

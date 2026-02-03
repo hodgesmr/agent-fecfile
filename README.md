@@ -74,7 +74,7 @@ codex mcp add fec-api -- uv run ~/agent-fecfile/mcp-server/server.py
 ```
 
 > [!IMPORTANT]
-> The MCP server loads the FEC API key from the system keyring once at startup. It is expected to see system prompts to authorize Python's access to the key at this point.
+> The MCP server loads the FEC API key from the system keyring on first tool use. You should expect to see a system prompt to authorize Python's access to the key the first time you use `search_committees` or `get_filings`.
 
 **Updating:**
 
@@ -225,7 +225,7 @@ agent-fecfile/
 ```
 
 The MCP server:
-- Loads the FEC API key from keyring **once at startup**
+- Loads the FEC API key from keyring **on first tool use** (not at startup)
 - Holds the key in memory, never exposing it to the model
 - Provides `search_committees` and `get_filings` tools
 
@@ -235,7 +235,7 @@ The MCP server:
 
 - **Untrusted content**: FEC filings should be considered [untrusted content](https://simonwillison.net/2025/Jun/16/the-lethal-trifecta/). A malicious campaign sneaking prompt injections into the memo text field of their F99 is probably unlikely, but not impossible.
 
-- **Keyring access**: The MCP server accesses the keyring **once at startup**. Most MCP runtimes start the server at the beginning of a session, so you should expect a system prompt (e.g., "Python wants to access your keychain") when your agent session begins. This is normal. The key is held in the MCP server's memory for the session duration. You should **not** see keyring prompts at any other time; if you do, investigate.
+- **Keyring access**: The MCP server accesses the keyring **on first tool use**. You should expect a system prompt (e.g., "Python wants to access your keychain") when your agent first calls the MCP server. This is normal. The key is held in the MCP server's memory for the session duration. You should **not** see keyring prompts at any other time; if you do, investigate.
 
 ## Acknowledgments
 

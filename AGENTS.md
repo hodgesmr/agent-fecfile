@@ -46,7 +46,7 @@ agent-fecfile/
 **MCP Server:**
 - The MCP server is automatically started by Claude Code when loaded as a plugin
 - For other runtimes, configure MCP to run: `uv run mcp-server/server.py`
-- The server loads the FEC API key from keyring once at startup
+- The server loads the FEC API key from keyring on first tool use
 
 ## Coding Style & Naming Conventions
 
@@ -111,7 +111,7 @@ The script extracts the version from plugin.json, creates the version tag, updat
 ### MCP Server
 
 The MCP server (`mcp-server/server.py`) provides secure API access:
-- Loads FEC API key from system keyring **once at startup**
+- Loads FEC API key from system keyring **on first tool use** (lazy loading)
 - Key held in memory, never exposed to the model
 - Exposes `search_committees` and `get_filings` as MCP tools
 - Uses stdio transport for communication with Claude Code
