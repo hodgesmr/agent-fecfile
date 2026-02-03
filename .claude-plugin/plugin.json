@@ -1,7 +1,7 @@
 {
   "name": "fecfile",
   "description": "Analyze FEC campaign finance filings with secure API key handling",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "author": {
     "name": "Matt Hodges"
   },
