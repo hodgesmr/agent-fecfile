@@ -23,7 +23,7 @@ The plugin includes detailed field mappings for common form types and schedules,
 - [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) or another MCP-compatible runtime (e.g., [Codex CLI](https://developers.openai.com/codex/cli/))
 - [uv](https://docs.astral.sh/uv/) (for running Python scripts)
 - Python 3.9+
-- An [FEC API key](https://api.open.fec.gov/developers/) (optional, for committee/filing search)
+- An [FEC API key](https://api.open.fec.gov/developers/) (for committee/filing search)
 
 ## Installation
 
@@ -137,7 +137,7 @@ If you already have an FEC filing ID, you can work with it directly, without nee
   6 states total, with only 7 out-of-state contributions.
 ```
 
-### FEC API Setup (Optional)
+### FEC API Setup
 
 The MCP server provides committee and filing search via the authenticated FEC API.
 
