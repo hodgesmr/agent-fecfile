@@ -159,12 +159,6 @@ To shield the key from LLM model consumption, the API key must be stored in your
    - Password: *your API key*
 4. Click Add
 
-**Linux (GNOME Keyring):**
-
-```bash
-secret-tool store --label="FEC API Key" service fec-api username api-key
-```
-
 ### Searching For Committees and Filings
 
 Once your API key is stored, queries become more powerful. You can search for committees and filings without knowing the filing ID in advance.
