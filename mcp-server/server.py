@@ -2,9 +2,9 @@
 # /// script
 # requires-python = ">=3.9"
 # dependencies = [
-#     "mcp>=1.0.0",
-#     "requests>=2.28.0",
-#     "keyring>=24.0.0",
+#     "mcp>=1.26.0",
+#     "requests>=2.32.0",
+#     "keyring>=25.7.0",
 # ]
 # ///
 """
