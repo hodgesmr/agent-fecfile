@@ -1,7 +1,7 @@
 {
   "name": "fecfile",
-  "description": "Analyze FEC campaign finance filings with secure API key handling",
-  "version": "2.0.1",
+  "description": "Analyze FEC (Federal Election Commission) campaign finance filings. Use when working with FEC filing IDs, campaign finance data, contributions, disbursements, or political committee financial reports. Provides the proper workflow for the fec-api MCP tools (search_committees, get_filings).",
+  "version": "2.0.2",
   "author": {
     "name": "Matt Hodges"
   },

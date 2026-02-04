@@ -86,7 +86,9 @@ class FECAPIServer:
                     description=(
                         "Search for FEC committees by name. Returns committee IDs "
                         "that can be used with get_filings. Requires FEC API key "
-                        "to be configured in system keyring."
+                        "to be configured in system keyring. For detailed filing "
+                        "analysis, invoke the fecfile skill which provides the "
+                        "proper uv-based workflow."
                     ),
                     inputSchema={
                         "type": "object",
@@ -109,7 +111,9 @@ class FECAPIServer:
                     description=(
                         "Get FEC filings for a committee. Returns filing IDs, dates, "
                         "and financial summaries. Use search_committees first to find "
-                        "the committee ID. Requires FEC API key to be configured."
+                        "the committee ID. Requires FEC API key to be configured. "
+                        "For detailed filing analysis, invoke the fecfile skill which "
+                        "provides the proper uv-based workflow."
                     ),
                     inputSchema={
                         "type": "object",
