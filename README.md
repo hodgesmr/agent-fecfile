@@ -10,26 +10,25 @@ This plugin enables AI agents to fetch, parse, and analyze FEC filings directly 
 
 The plugin includes detailed field mappings for common form types and schedules, helping agents accurately interpret campaign finance data like contributions, disbursements, and committee information.
 
-## What it Does
+## Features
 
-- Automatically downloads and reads FEC filings for your AI agent.
-- Lets you search for political committees and their financial reports.
-- Understands major campaign finance forms (F1, F2, F3, F99).
-- Accurately reads contributions, spending, and detailed schedules.
+- Fetch and analyze FEC filings by filing ID (Agent Skill)
+- Search for committees and filings via the FEC API (MCP server)
+- Support for major form types (F1, F2, F3, F99)
+- Detailed field mappings for contributions, disbursements, and schedules
+- Auto-installing dependencies via uv
 
-## Prerequisites for Beginners
+## Requirements
 
-If you're not a developer, don't worry! You can still use this tool. You'll just need a few basic things set up first.
-
-1. **Claude Desktop or Claude Code**: This tool works perfectly in the [Claude Desktop App](https://claude.ai/download) using the "Code" tab, which gives the AI a space to run scripts. Alternatively, advanced users can use the terminal-based [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code).
-2. **Python & uv**: This tool runs on Python. You must install a tool called `uv` globally from their [website](https://docs.astral.sh/uv/) (using their standard install commands). This ensures your system can find it automatically and allows Claude Desktop to run scripts in the background.
-3. **An FEC API key**: (Optional but recommended) This lets you search for committees. You can get a free one from the [FEC Developers page](https://api.open.fec.gov/developers/).
+1. **Claude Desktop or Claude Code**: This tool works in the [Claude Desktop App](https://claude.ai/download) using the "Code" tab, which gives the AI a space to run scripts. Alternatively, advanced users can use the terminal-based [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code).
+2. **Python & uv**: This tool runs on Python. You must install `uv` globally from their [website](https://docs.astral.sh/uv/) (using their standard install commands). This ensures your system can find it automatically and allows Claude Desktop to run scripts in the background.
+3. **An FEC API key**: (Optional but recommended) This lets you search for committees and filings. You can get a free one from the [FEC Developers page](https://api.open.fec.gov/developers/).
 
 ## Installation
 
 ### Step 1: Install the Plugin (Recommended)
 
-You can install this plugin either through Claude Desktop's Code tab, or directly in your terminal if you use Claude Code. Just paste the following commands:
+You can install this plugin either through Claude Desktop's Code tab, or directly in your terminal if you use Claude Code.
 
 ```bash
 # First, tell Claude where to find this plugin
@@ -39,10 +38,11 @@ claude plugin marketplace add hodgesmr/agent-fecfile
 claude plugin install fecfile@agent-fecfile
 ```
 
-*Note: If you're using Claude Desktop, you may need to restart the app or start a new Code session for the new features to fully load.*
+*Note: You may need to restart the app or start a new Code session for the new features to fully load.*
 
-**How to Update Later:**
+**Updating:**
 If you need to update to a newer version in the future, run these commands:
+
 ```bash
 claude plugin marketplace update agent-fecfile
 claude plugin update fecfile@agent-fecfile
@@ -83,20 +83,18 @@ cd ~/agent-fecfile && git fetch --tags --force && git checkout latest
 
 ## Usage
 
-Once installed, you can talk to your AI agent and ask it to analyze FEC data. Just type your questions directly into Claude Code.
+Once installed, ask your agent to analyze FEC filings.
 
 > [!TIP]
-> For best results, use the most capable AI models available (like Claude 3.5 Sonnet or Opus). They are much better at understanding and formatting complex financial data.
+> For best results, use the most capable AI models available (like Claude Opus). More capable models produce better analysis and more accurate field interpretations.
 
 ### Basic Usage (With A Filing ID)
 
-If you already know the specific FEC filing ID (a 7-digit number found on the FEC website), you don't even need an API key. Just ask Claude about it! 
+If you already have an FEC filing ID, you can work with it directly, without needing an API key:
 
-Here is an example of what you might type, and how Claude will respond:
 
-**You type:**
 ```text
-What are the largest expenditures in filing 1896830?
+❯ What are the largest expenditures in filing 1896830?
 ```
 
 ```text
@@ -118,9 +116,8 @@ What are the largest expenditures in filing 1896830?
   in May 2025.
 ```
 
-**You type:**
 ```text
-Show me a table of the contribution counts and totals, by state, in fec filing 1896830
+❯ Show me a table of the contribution counts and totals, by state, in fec filing 1896830
 ```
 
 ```text
@@ -142,44 +139,35 @@ Show me a table of the contribution counts and totals, by state, in fec filing 1
 
 ### FEC API Setup (For Searching)
 
-If you want to search for a committee or filing without knowing their exact ID in advance, you'll need to set up an API key. This only takes a minute!
+The MCP server provides committee and filing search via the authenticated FEC API.
 
-#### 1. Get your free API Key
+#### 1. Get an API Key
 
 1. Visit the [FEC API Developer page](https://api.open.fec.gov/developers/).
-2. Fill out the short form under "Sign up for an API key".
-3. You'll receive your API key in your email within seconds. Keep this email open!
+2. Go to "Sign up for an API key" and fill out the form
+3. You'll receive your API key via email
 
 #### 2. Securely Store Your API Key
 
-We need to store this key securely on your computer so the tool can use it. The AI itself never sees your key.
+To shield the key from LLM model consumption, the API key must be stored in your system keyring. The MCP server uses the Python [keyring](https://pypi.org/project/keyring/) library, which supports a variety of operating system keyrings.
 
-**For Mac Users:**
-1. Open "Keychain Access" (Press Command + Space, type "Keychain Access", and hit Enter).
-2. Click `File` → `New Password Item` in the top menu bar (or press Command + N).
-3. Fill in the form exactly like this:
-   - **Keychain Item Name:** `fec-api`
-   - **Account Name:** `api-key`
-   - **Password:** *(paste the API key you got in your email)*
-4. Click **Add**.
-
-**For Windows Users:**
-1. Open the Start menu, search for "Credential Manager" and open it.
-2. Click on **Windows Credentials**.
-3. Click **Add a generic credential**.
-4. Fill in the form:
-   - **Internet or network address:** `fec-api`
-   - **User name:** `api-key`
-   - **Password:** *(paste the API key you got in your email)*
-5. Click **OK**.
+**macOS:**
+1. Open Keychain Access (Applications → Utilities → Keychain Access)
+2. Click File → New Password Item (or press ⌘N)
+3. Fill in:
+   - Keychain Item Name: `fec-api`
+   - Account Name: `api-key`
+   - Password: *your API key*
+4. Click Add
 
 ### Searching For Committees and Filings
 
-Once your API key is securely stored, you can ask Claude general questions without needing a filing ID. 
+Once your API key is stored, queries become more powerful. You can search for committees and filings without knowing the filing ID in advance.
 
-**You type:**
+The MCP server provides `search_committees` and `get_filings` tools. The API key is loaded once at server startup and kept in memory—it is never visible to the model. 
+
 ```text
-What are the top expenditures in Utah Republican Party's most recent filing?
+❯ What are the top expenditures in Utah Republican Party's most recent filing?
 ```
 
 ```text
